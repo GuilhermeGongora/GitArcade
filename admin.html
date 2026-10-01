@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel Git Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Layout: presenter console. Status bar on top, KPI strip, then live feed + charts in a 2-column grid, full table last. Single dark look, same arcade language as the game. */
+:root{
+  --bg:#0b0b1a; --panel:#050510; --line:#2a2a4a; --fg:#e8e6d9; --mut:#9a9ab8;
+  --ok:#3fae4a; --err:#e0479e; --accent:#ffd23f; --cy:#00e5ff;
+  --px:'Press Start 2P','Courier New',monospace; --vt:'VT323','Courier New',monospace;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+h1,h2,h3,p,ul,ol{margin:0}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--vt);font-size:20px;line-height:1.25;padding-inline:16px;padding-block:14px 40px;margin:0}
+.wrap{max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:4px solid var(--line);box-shadow:6px 6px 0 #000;padding:16px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.card h2{font-family:var(--px);font-size:11px;font-weight:400;color:var(--accent);letter-spacing:1px;line-height:1.6}
+.muted{color:var(--mut)}
+.top{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px 20px}
+.top img{height:44px}
+.top h1{font-family:var(--px);font-size:16px;font-weight:400;color:#39ff14;text-shadow:3px 3px 0 #ff2bd6;margin-right:auto}
+.live{display:flex;align-items:center;gap:8px;font-family:var(--px);font-size:9px;color:var(--mut)}
+.dot{width:10px;height:10px;background:var(--mut)}
+.live.on .dot{background:#39ff14;animation:blink 1.4s steps(2) infinite}
+.live.on{color:#39ff14}
+.live.off .dot{background:#ff3b3b}.live.off{color:#ff3b3b}
+@keyframes blink{50%{opacity:.3}}
+label.tg{display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--mut)}
+label.tg input{width:18px;height:18px;accent-color:var(--ok)}
+.btn{font-family:var(--px);font-size:9px;padding:9px 12px 8px;background:#12122b;color:var(--fg);border:3px solid var(--fg);box-shadow:4px 4px 0 #000;cursor:pointer}
+.btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #000}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{background:var(--panel);border:3px solid var(--line);padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.kpi small{font-family:var(--px);font-size:8px;color:var(--mut);letter-spacing:1px;line-height:1.5}
+.kpi b{font-family:var(--px);font-size:20px;font-weight:400;color:var(--fg);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi span{color:var(--mut);font-size:17px}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:980px){.grid{grid-template-columns:minmax(0,1fr)}}
+
+.feed{list-style:none;padding:0;display:flex;flex-direction:column;gap:6px;max-height:520px;overflow-y:auto}
+.feed li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:8px 10px;background:#08081a;border-left:4px solid var(--line)}
+.feed li.new{animation:flash 1.2s steps(4)}
+@keyframes flash{0%,50%{background:#1d1d40}}
+.feed .t{font-family:var(--px);font-size:9px;color:var(--mut);font-variant-numeric:tabular-nums}
+.feed .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:22px}
+.feed .meta{grid-column:2 / 4;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;color:var(--mut);font-size:17px}
+.prog{display:flex;gap:3px}
+.prog i{width:12px;height:10px;background:#1b1b33}
+.prog i.on{background:var(--ok)}
+.chip{font-family:var(--px);font-size:8px;padding:4px 6px 3px;border:2px solid}
+.chip.play{color:#39ff14;border-color:#39ff14}
+.chip.idle{color:var(--mut);border-color:var(--mut)}
+.chip.win{color:#14100a;background:var(--accent);border-color:var(--accent)}
+.chip.test{color:var(--err);border-color:var(--err)}
+
+.chart{position:relative;min-height:120px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--mut);font-size:18px}
+.legend i{display:inline-block;width:14px;height:14px;margin-right:6px;vertical-align:-1px}
+.tip{position:fixed;pointer-events:none;background:#12122b;border:2px solid var(--fg);padding:6px 10px;font-size:18px;z-index:10;box-shadow:4px 4px 0 #000;max-width:260px}
+.empty{color:var(--mut);padding:24px 0;text-align:center}
+
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:19px;font-variant-numeric:tabular-nums}
+th{font-family:var(--px);font-size:8px;font-weight:400;color:var(--mut);text-align:left;padding:8px;border-bottom:2px solid var(--line);white-space:nowrap}
+td{padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td.num,th.num{text-align:right}
+.rank{list-style:none;padding:0;display:flex;flex-direction:column;gap:4px}
+.rank li{display:flex;gap:12px;align-items:baseline;padding:4px 8px;background:#08081a;border-left:4px solid var(--line)}
+.rank li:first-child{border-left-color:var(--accent)}
+.rank .p{font-family:var(--px);font-size:10px;color:var(--accent)}
+.rank .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank .tm{font-family:var(--px);font-size:10px;color:var(--cy)}
+@media (prefers-reduced-motion: reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="card top">
+    <img src="unisanta.png" alt="Unisanta" onerror="this.hidden=true">
+    <h1>PAINEL DO PALESTRANTE</h1>
+    <div class="live" id="live"><span class="dot"></span><span id="liveTxt">CONECTANDO…</span></div>
+    <label class="tg"><input type="checkbox" id="hideTests" checked> ocultar testes</label>
+    <button class="btn" id="btnCsv" type="button">EXPORTAR CSV</button>
+  </header>
+
+  <section class="kpis" aria-label="Resumo">
+    <div class="kpi"><small>ENTRARAM</small><b id="kIn">0</b><span id="kInSub">—</span></div>
+    <div class="kpi"><small>JOGANDO AGORA</small><b id="kNow">0</b><span>ativos nos últimos 3 min</span></div>
+    <div class="kpi"><small>ZERARAM</small><b id="kWin">0</b><span id="kWinSub">—</span></div>
+    <div class="kpi"><small>MELHOR TEMPO</small><b id="kBest">—</b><span id="kBestSub">—</span></div>
+    <div class="kpi"><small>TEMPO MÉDIO</small><b id="kAvg">—</b><span>de quem zerou</span></div>
+    <div class="kpi"><small>COMANDOS</small><b id="kCmd">0</b><span id="kCmdSub">—</span></div>
+    <div class="kpi"><small>DICAS USADAS</small><b id="kHint">0</b><span id="kHintSub">—</span></div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>QUEM FOI ENTRANDO</h2>
+      <ul class="feed" id="feed"></ul>
+    </section>
+    <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+      <section class="card">
+        <h2>RANKING · MENOR TEMPO</h2>
+        <ol class="rank" id="rank"></ol>
+      </section>
+      <section class="card">
+        <h2>ENTRADAS AO LONGO DO TEMPO</h2>
+        <p class="muted">Jogadores que apertaram PRESS START, por minuto.</p>
+        <div class="chart" id="chTime"></div>
+      </section>
+    </div>
+    <section class="card">
+      <h2>ATÉ ONDE CHEGARAM</h2>
+      <p class="muted">Quantos jogadores resolveram cada fase. Onde a barra cai, a turma travou.</p>
+      <div class="chart" id="chFunnel"></div>
+    </section>
+    <section class="card">
+      <h2>COMANDOS MAIS USADOS</h2>
+      <div class="legend"><span><i style="background:var(--ok)"></i>funcionou</span><span><i style="background:var(--err)"></i>deu erro</span></div>
+      <div class="chart" id="chCmds"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>TODOS OS JOGADORES</h2>
+    <div class="tablewrap"><table id="tbl"><thead><tr>
+      <th>NOME</th><th>ENTROU</th><th>STATUS</th><th>FASE</th><th class="num">RESOLVIDAS</th><th class="num">COMANDOS</th><th class="num">ERROS</th><th class="num">DICAS</th><th class="num">TEMPO</th><th class="num">SCORE</th><th>APARELHO</th>
+    </tr></thead><tbody></tbody></table></div>
+    <p class="muted">Os dados são atualizados a cada fase concluída, a cada dica e a cada poucos comandos. "Jogando agora" considera atividade nos últimos 3 minutos.</p>
+  </section>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script type="module">
+const firebaseConfig = {
+  apiKey: "AIzaSyC5xZzAyNHjYoTpwUKADbu0GM9kZSfDHkA",
+  authDomain: "gitarcade-f22cb.firebaseapp.com",
+  projectId: "gitarcade-f22cb",
+  storageBucket: "gitarcade-f22cb.firebasestorage.app",
+  messagingSenderId: "154626906750",
+  appId: "1:154626906750:web:d53fb8b72d61d8a1f6162f"
+};
+const LEVELS = ['1-1','1-2','2-1','2-2','2-3','3-1','3-2','3-3','BOSS'];
+const $ = s => document.querySelector(s);
+const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+const NS = 'http://www.w3.org/2000/svg';
+const sv = (t, a) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
+const fmt = ms => { if (ms == null) return '—'; const t = Math.floor(ms / 100), d = t % 10, s = Math.floor(t / 10) % 60, m = Math.floor(t / 600) % 60, h = Math.floor(t / 36000); return (h ? h + ':' : '') + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0') + '.' + d; };
+const hhmm = ts => new Date(ts).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+const n = v => Number(v) || 0;
+
+let players = [], ranking = [], seen = new Set(), firstLoad = true;
+
+function status(p){
+  if (p.finishedMs != null) return {k: 'win', t: 'ZEROU'};
+  if (Date.now() - n(p.lastSeen) < 180000) return {k: 'play', t: 'JOGANDO'};
+  return {k: 'idle', t: 'PARADO'};
+}
+function visible(){ return $('#hideTests').checked ? players.filter(p => !p.test) : players; }
+
+// ---------- tooltip
+const tip = $('#tip');
+function bindTip(node, text){
+  node.addEventListener('pointermove', e => { tip.textContent = text; tip.hidden = false; tip.style.left = Math.min(e.clientX + 14, innerWidth - 280) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; });
+  node.addEventListener('pointerleave', () => { tip.hidden = true; });
+}
+
+// ---------- charts (hand-drawn SVG, one scale per chart)
+function hbar(host, rows, opts){
+  host.innerHTML = '';
+  if (!rows.length){ host.appendChild(el('p', 'empty', opts.empty)); return; }
+  const W = Math.max(300, host.clientWidth), labelW = opts.labelW || 130, valW = 54, rowH = 30, barH = 18;
+  const H = rows.length * rowH + 6, max = Math.max(1, ...rows.map(r => r.total));
+  const plotW = W - labelW - valW;
+  const svg = sv('svg', {viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'img', 'aria-label': opts.aria});
+  // faint grid at quarters
+  for (let q = 1; q <= 4; q++){ const x = labelW + plotW * q / 4; svg.appendChild(sv('line', {x1: x, x2: x, y1: 0, y2: H, stroke: '#1b1b33', 'stroke-width': 1})); }
+  rows.forEach((r, i) => {
+    const y = i * rowH + (rowH - barH) / 2;
+    const lab = sv('text', {x: labelW - 10, y: y + barH - 4, 'text-anchor': 'end', fill: '#e8e6d9', 'font-family': 'VT323, monospace', 'font-size': 19}); lab.textContent = r.label; svg.appendChild(lab);
+    let x = labelW;
+    (r.parts || [{v: r.total, c: 'var(--ok)'}]).forEach((part, k, arr) => {
+      if (!part.v) return;
+      const w = Math.max(2, plotW * part.v / max - (k < arr.length - 1 ? 2 : 0));
+      svg.appendChild(sv('rect', {x, y, width: w, height: barH, fill: part.c, rx: 0}));
+      x += w + 2;
+    });
+    const val = sv('text', {x: labelW + plotW * r.total / max + 8, y: y + barH - 4, fill: '#9a9ab8', 'font-family': 'VT323, monospace', 'font-size': 19}); val.textContent = r.total; svg.appendChild(val);
+    const hit = sv('rect', {x: 0, y: i * rowH, width: W, height: rowH, fill: 'transparent'});
+    bindTip(hit, r.tip); svg.appendChild(hit);
+  });
+  host.appendChild(svg);
+}
+function timeChart(host, list){
+  host.innerHTML = '';
+  if (!list.length){ host.appendChild(el('p', 'empty', 'Ninguém entrou ainda.')); return; }
+  const ts = list.map(p => n(p.startedAt)).filter(Boolean).sort((a, b) => a - b);
+  const start = Math.floor(ts[0] / 60000), end = Math.max(Math.floor(Date.now() / 60000), Math.floor(ts[ts.length - 1] / 60000));
+  const span = Math.min(end - start + 1, 180), first = end - span + 1;
+  const bins = new Array(span).fill(0);
+  ts.forEach(t => { const i = Math.floor(t / 60000) - first; if (i >= 0 && i < span) bins[i]++; });
+  const W = Math.max(300, host.clientWidth), H = 170, padL = 32, padB = 26, padT = 10;
+  const max = Math.max(1, ...bins), bw = (W - padL) / span;
+  const svg = sv('svg', {viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'img', 'aria-label': 'Entradas por minuto'});
+  const ticks = max <= 4 ? Array.from({length: max + 1}, (_, i) => i) : [0, Math.round(max / 2), max];
+  ticks.forEach(v => { const y = H - padB - (H - padB - padT) * v / max; svg.appendChild(sv('line', {x1: padL, x2: W, y1: y, y2: y, stroke: '#1b1b33'})); const t = sv('text', {x: padL - 6, y: y + 5, 'text-anchor': 'end', fill: '#9a9ab8', 'font-family': 'VT323, monospace', 'font-size': 17}); t.textContent = v; svg.appendChild(t); });
+  bins.forEach((v, i) => {
+    const x = padL + i * bw, h = (H - padB - padT) * v / max;
+    if (v) svg.appendChild(sv('rect', {x: x + 1, y: H - padB - h, width: Math.max(1, bw - 2), height: h, fill: 'var(--ok)'}));
+    const hit = sv('rect', {x, y: padT, width: bw, height: H - padB - padT, fill: 'transparent'});
+    bindTip(hit, `${hhmm((first + i) * 60000)} · ${v} entrada(s)`); svg.appendChild(hit);
+  });
+  const lt = [0, Math.floor(span / 2), span - 1].filter((v, i, a) => a.indexOf(v) === i);
+  lt.forEach(i => { const t = sv('text', {x: padL + i * bw + bw / 2, y: H - 6, 'text-anchor': i === 0 ? 'start' : i === span - 1 ? 'end' : 'middle', fill: '#9a9ab8', 'font-family': 'VT323, monospace', 'font-size': 17}); t.textContent = hhmm((first + i) * 60000); svg.appendChild(t); });
+  host.appendChild(svg);
+}
+
+// ---------- render
+function render(){
+  const list = visible(), now = Date.now();
+  const wins = list.filter(p => p.finishedMs != null).sort((a, b) => a.finishedMs - b.finishedMs);
+  const playing = list.filter(p => status(p).k === 'play');
+  const cmdTot = list.reduce((s, p) => s + n(p.cmdTotal), 0), errTot = list.reduce((s, p) => s + n(p.errTotal), 0);
+  const hints = list.reduce((s, p) => s + n(p.hintsUsed), 0);
+  $('#kIn').textContent = list.length;
+  $('#kInSub').textContent = list.length ? `${list.filter(p => p.device === 'mobile').length} no celular` : 'aguardando a turma';
+  $('#kNow').textContent = playing.length;
+  $('#kWin').textContent = wins.length;
+  $('#kWinSub').textContent = list.length ? `${Math.round(100 * wins.length / list.length)}% de quem entrou` : '—';
+  $('#kBest').textContent = wins[0] ? fmt(wins[0].finishedMs) : '—';
+  $('#kBestSub').textContent = wins[0] ? wins[0].name : '—';
+  $('#kAvg').textContent = wins.length ? fmt(wins.reduce((s, p) => s + p.finishedMs, 0) / wins.length) : '—';
+  $('#kCmd').textContent = cmdTot.toLocaleString('pt-BR');
+  $('#kCmdSub').textContent = cmdTot ? `${Math.round(100 * errTot / cmdTot)}% deram erro` : '—';
+  $('#kHint').textContent = hints;
+  $('#kHintSub').textContent = list.length ? `média ${(hints / list.length).toFixed(1)} por jogador` : '—';
+
+  // feed
+  const feed = $('#feed'); feed.innerHTML = '';
+  if (!list.length) feed.appendChild(el('li', 'muted', 'Assim que alguém apertar PRESS START, aparece aqui.'));
+  [...list].sort((a, b) => n(b.startedAt) - n(a.startedAt)).slice(0, 60).forEach(p => {
+    const st = status(p), li = el('li', seen.has(p.id) || firstLoad ? '' : 'new');
+    li.style.borderLeftColor = st.k === 'win' ? 'var(--accent)' : st.k === 'play' ? '#39ff14' : 'var(--line)';
+    li.appendChild(el('span', 't', hhmm(n(p.startedAt))));
+    li.appendChild(el('span', 'n', p.name || '???'));
+    const chips = el('span', ''); chips.appendChild(el('span', 'chip ' + st.k, st.t)); if (p.test) chips.appendChild(el('span', 'chip test', 'TESTE')); li.appendChild(chips);
+    const meta = el('div', 'meta');
+    const prog = el('span', 'prog'); prog.setAttribute('aria-label', `${n(p.cleared)} de 9 fases`);
+    for (let i = 0; i < 9; i++) prog.appendChild(el('i', i < n(p.cleared) ? 'on' : ''));
+    meta.appendChild(prog);
+    meta.appendChild(el('span', '', `${n(p.cleared)}/9 · fase ${p.finishedMs != null ? 'BOSS ok' : (p.level || '1-1')}`));
+    meta.appendChild(el('span', '', `${n(p.cmdTotal)} cmds · ${n(p.errTotal)} erros · ${n(p.hintsUsed)} dicas`));
+    if (p.finishedMs != null) meta.appendChild(el('span', '', `tempo ${fmt(p.finishedMs)}`));
+    li.appendChild(meta); feed.appendChild(li); seen.add(p.id);
+  });
+  firstLoad = false;
+
+  // ranking (hide entries that belong to hidden test players)
+  const testKeys = new Set(players.filter(p => p.test && p.finishedMs != null).map(p => (p.name || '').toLowerCase() + '|' + Math.floor(p.finishedMs / 100)));
+  const rk = (($('#hideTests').checked) ? ranking.filter(r => !testKeys.has((r.name || '').toLowerCase() + '|' + Math.floor(n(r.ms) / 100))) : ranking).slice(0, 10);
+  const ol = $('#rank'); ol.innerHTML = '';
+  if (!rk.length) ol.appendChild(el('li', 'muted', 'Ninguém derrotou o boss ainda.'));
+  rk.forEach((r, i) => { const li = el('li'); li.appendChild(el('span', 'p', String(i + 1).padStart(2, '0'))); li.appendChild(el('span', 'nm', r.name || '???')); li.appendChild(el('span', 'tm', fmt(n(r.ms)))); ol.appendChild(li); });
+
+  // funnel
+  hbar($('#chFunnel'), list.length ? LEVELS.map((id, i) => {
+    const c = list.filter(p => n(p.cleared) > i).length;
+    return {label: id, total: c, tip: `${id}: ${c} de ${list.length} jogador(es) resolveram`};
+  }) : [], {labelW: 70, aria: 'Jogadores que resolveram cada fase', empty: 'Sem dados ainda.'});
+
+  // commands
+  const agg = {};
+  list.forEach(p => {
+    Object.entries(p.cmds || {}).forEach(([k, v]) => { (agg[k] = agg[k] || {t: 0, e: 0}).t += n(v); });
+    Object.entries(p.errs || {}).forEach(([k, v]) => { (agg[k] = agg[k] || {t: 0, e: 0}).e += n(v); });
+  });
+  const rows = Object.entries(agg).sort((a, b) => b[1].t - a[1].t).slice(0, 12).map(([k, v]) => ({
+    label: k, total: v.t, parts: [{v: v.t - v.e, c: 'var(--ok)'}, {v: v.e, c: 'var(--err)'}],
+    tip: `${k}: ${v.t} vez(es) · ${v.e} com erro (${v.t ? Math.round(100 * v.e / v.t) : 0}%)`
+  }));
+  hbar($('#chCmds'), rows, {labelW: 150, aria: 'Comandos mais usados, separando os que deram erro', empty: 'Nenhum comando digitado ainda.'});
+
+  timeChart($('#chTime'), list);
+
+  // table
+  const tb = $('#tbl tbody'); tb.innerHTML = '';
+  const order = {play: 0, win: 1, idle: 2};
+  [...list].sort((a, b) => order[status(a).k] - order[status(b).k] || n(b.cleared) - n(a.cleared) || n(a.startedAt) - n(b.startedAt)).forEach(p => {
+    const tr = el('tr'), st = status(p);
+    const cells = [p.name || '???', hhmm(n(p.startedAt)), null, p.finishedMs != null ? '—' : (p.level || '1-1'), n(p.cleared) + '/9', n(p.cmdTotal), n(p.errTotal), n(p.hintsUsed), fmt(p.finishedMs), String(n(p.score)).padStart(6, '0'), p.device === 'mobile' ? 'celular' : 'computador'];
+    cells.forEach((c, i) => {
+      const td = el('td', i >= 4 && i <= 9 ? 'num' : '');
+      if (i === 2){ td.appendChild(el('span', 'chip ' + st.k, st.t)); if (p.test){ td.append(' '); td.appendChild(el('span', 'chip test', 'TESTE')); } }
+      else td.textContent = c;
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+}
+
+// ---------- CSV
+$('#btnCsv').addEventListener('click', () => {
+  const head = ['nome', 'entrou', 'status', 'fase', 'resolvidas', 'comandos', 'erros', 'dicas', 'tempo', 'tempo_ms', 'score', 'aparelho', 'teste'];
+  const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const lines = [head.join(';')].concat(players.map(p => [p.name, new Date(n(p.startedAt)).toLocaleString('pt-BR'), status(p).t, p.level, n(p.cleared), n(p.cmdTotal), n(p.errTotal), n(p.hintsUsed), fmt(p.finishedMs), p.finishedMs ?? '', n(p.score), p.device, p.test ? 'sim' : 'não'].map(q).join(';')));
+  const blob = new Blob(['﻿' + lines.join('\n')], {type: 'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'git-arcade-jogadores.csv'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+$('#hideTests').addEventListener('change', render);
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 150); });
+setInterval(render, 30000); // refresh "jogando agora" even without new data
+
+// ---------- Firestore
+const setLive = (on, txt) => { $('#live').className = 'live ' + (on ? 'on' : 'off'); $('#liveTxt').textContent = txt; };
+try {
+  const [{ initializeApp }, fs] = await Promise.all([
+    import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
+    import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+  ]);
+  const db = fs.getFirestore(initializeApp(firebaseConfig));
+  fs.onSnapshot(fs.collection(db, 'players'), s => {
+    players = s.docs.map(d => ({id: d.id, ...d.data()}));
+    setLive(true, 'AO VIVO'); render();
+  }, e => setLive(false, 'SEM ACESSO: confira as regras do Firestore'));
+  fs.onSnapshot(fs.query(fs.collection(db, 'ranking'), fs.orderBy('ms', 'asc'), fs.limit(50)), s => {
+    ranking = s.docs.map(d => d.data()); render();
+  }, () => {});
+} catch (e) {
+  setLive(false, 'SEM CONEXÃO COM O FIREBASE');
+}
+render();
+</script>
+</body>
+</html>
