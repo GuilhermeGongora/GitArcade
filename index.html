@@ -1,0 +1,1688 @@
+<title>Git Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Layout: arcade cabinet. HUD on top, CRT graph + terminal on the left, mission panel on the right; start screen and certificate as full overlays. Single dark look on purpose. */
+:root{
+  --bg:#0b0b1a; --bg2:#12122b; --bg3:#050510; --line:#2a2a4a; --fg:#e8e6d9; --mut:#9a9ab8;
+  --blob:#39ff14; --tree:#00e5ff; --commit:#ffd23f; --ref:#ff2bd6; --head:#ff3b3b;
+  --px:'Press Start 2P', 'Courier New', monospace; --vt:'VT323', 'Courier New', monospace;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+h1,h2,h3,p,ul,ol{margin:0}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--vt);font-size:21px;line-height:1.25;padding-inline:16px;padding-block:12px 32px;min-height:100%}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 2px,transparent 2px 5px);z-index:60}
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{cursor:not-allowed}
+:focus-visible{outline:3px solid var(--commit);outline-offset:2px}
+.wrap{max-width:1500px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+
+/* HUD */
+.hud{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;padding:10px 16px;background:var(--bg3);border:4px solid var(--line);box-shadow:6px 6px 0 #000}
+.brand{display:flex;align-items:center;gap:12px;margin-right:auto;min-width:0}
+.brand img{height:44px;width:auto;display:block}
+.logo{font-family:var(--px);font-size:16px;color:var(--blob);text-shadow:3px 3px 0 var(--ref);letter-spacing:1px;white-space:nowrap}
+.logo span{color:var(--commit);margin-left:6px}
+.stat{display:flex;flex-direction:column;gap:4px;min-width:0}
+.stat small{font-family:var(--px);font-size:8px;color:var(--mut);letter-spacing:1px}
+.stat b{font-family:var(--px);font-size:12px;font-weight:400;color:var(--fg);font-variant-numeric:tabular-nums;white-space:nowrap}
+#hudName{color:var(--ref);max-width:16ch;overflow:hidden;text-overflow:ellipsis}
+#hudScore{color:var(--commit)} #hudCmds.over{color:var(--head)} #hudHints{color:var(--tree);letter-spacing:2px}
+.stat.time b{font-size:16px;color:var(--head)}
+.stat.time.stopped b{color:var(--blob)}
+.stat.speed b{color:var(--tree)}
+.stat.pulse b{animation:pulse .6s steps(3)}
+@keyframes pulse{0%{color:#fff;text-shadow:0 0 8px var(--tree)}100%{}}
+.btn.small{font-size:8px;padding:8px 10px 7px}
+
+/* level select */
+.levels{display:flex;flex-wrap:wrap;gap:8px}
+.lvl{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 10px;background:var(--bg2);border:3px solid var(--line);box-shadow:4px 4px 0 #000;min-width:72px}
+.lvl .li{font-family:var(--px);font-size:10px}
+.lvl .ls{font-size:18px;color:var(--mut);letter-spacing:1px}
+.lvl.clear .ls{color:var(--commit)}
+.lvl.on{border-color:var(--blob);color:var(--blob)}
+.lvl.boss .li{color:var(--head)}
+.lvl.locked{opacity:.4;box-shadow:none}
+.lvl.locked .ls{font-family:var(--px);font-size:8px;letter-spacing:0;padding-block:5px}
+.lvl:not(:disabled):hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 #000}
+
+/* main grid */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:14px;align-items:start}
+@media (max-width:1050px){.grid{grid-template-columns:minmax(0,1fr)}}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.screen{background:var(--bg3);border:4px solid var(--line);box-shadow:6px 6px 0 #000;min-width:0}
+.stitle{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;padding:10px 14px;border-bottom:3px solid var(--line)}
+.stitle b{font-family:var(--px);font-size:11px;font-weight:400;color:var(--commit)}
+.stitle span{color:var(--mut);font-size:18px}
+
+/* graph */
+.gscroll{overflow-x:auto;overflow-y:hidden}
+.graph{position:relative;min-height:240px}
+#edges{position:absolute;left:0;top:0}
+.edge{fill:none;stroke:var(--commit);stroke-width:3}
+.edge.second{stroke:var(--ref)}
+.edge.orphan{stroke:#6b6b8f;stroke-dasharray:6 5}
+.cnode,.lbl{position:absolute;left:0;top:0;transition:transform .55s steps(9)}
+.cnode{margin:-26px 0 0 -38px;width:76px;height:52px;padding:0;border:none;background:none;display:block;z-index:2}
+.lbl{z-index:3}
+.cnode .hash{display:flex;align-items:center;justify-content:center;width:76px;height:52px;overflow:hidden;background:#2b2408;border:4px solid var(--commit);box-shadow:4px 4px 0 #7a5a00;font-family:var(--vt);font-size:17px;color:var(--commit)}
+.cnode .msg{position:absolute;left:50%;top:58px;transform:translateX(-50%);white-space:nowrap;font-size:17px;line-height:20px;color:var(--mut);max-width:112px;overflow:hidden;text-overflow:ellipsis}
+.cnode.merge .hash{border-style:double;border-width:6px;border-color:var(--ref) var(--commit) var(--commit) var(--ref)}
+.cnode.current .hash{background:#3d3308}
+.cnode.detached .hash{box-shadow:0 0 0 3px var(--head),4px 4px 0 #7a5a00}
+.cnode.sel .hash{outline:3px dashed var(--tree);outline-offset:4px}
+.cnode.orphan{opacity:.45}
+.cnode.orphan .hash{border-style:dashed;box-shadow:none;color:var(--mut);border-color:#6b6b8f;background:var(--bg3)}
+.cnode.born .hash{animation:pop .5s steps(5)}
+@keyframes pop{0%{transform:scale(0)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+.lbl .in{position:absolute;left:0;top:0;transform:translateX(-50%);white-space:nowrap;padding:3px 7px 2px;font-family:var(--px);font-size:9px;line-height:16px;border:3px solid;box-shadow:3px 3px 0 #000}
+.lbl.branch .in{color:var(--ref);border-color:var(--ref);background:#2a0826}
+.lbl.branch.active .in{background:var(--ref);color:#14020f}
+.lbl.branch.more .in{color:var(--fg);border-color:var(--mut);background:var(--bg2)}
+.lbl.head .in{color:#fff;border-color:var(--head);background:#5a0e0e}
+.lbl.head.detached .in{background:var(--head);color:#1a0303;animation:blink 1s steps(2) infinite}
+.lbl.head.unborn .in{border-style:dashed}
+.lbl.flash .in{animation:flash .7s steps(4)}
+@keyframes flash{0%,50%{box-shadow:0 0 0 4px var(--commit),3px 3px 0 #000}100%{}}
+@keyframes blink{50%{opacity:.6}}
+.graph.instant .cnode,.graph.instant .lbl{transition:none}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;padding:8px 14px;border-top:3px solid var(--line);font-size:18px;color:var(--mut)}
+.legend i{display:inline-block;width:14px;height:14px;margin-right:6px;vertical-align:-1px}
+
+/* terminal */
+.term{display:flex;flex-direction:column}
+#out{height:330px;overflow-y:auto;padding:12px 14px;font-size:20px;line-height:1.2;white-space:pre-wrap;word-break:break-word}
+.ln{min-height:1.2em}
+.ln.title{font-family:var(--px);font-size:11px;color:var(--commit);margin-top:4px;line-height:1.8}
+.ln.cmdline{color:var(--blob);margin-top:8px}
+.ln.err{color:var(--head)} .ln.ok{color:var(--blob)} .ln.info{color:var(--tree)} .ln.y{color:var(--commit)} .ln.m{color:var(--ref)} .ln.r{color:var(--head)} .ln.dim{color:var(--mut)}
+.ln.speed{color:var(--tree);opacity:.85}
+.ln.op{color:#cfcfe6;padding-left:12px}
+.ln.help b{color:var(--commit);font-weight:400;white-space:pre}
+.tag{display:inline-block;min-width:62px;text-align:center;font-family:var(--px);font-size:8px;padding:3px 4px 2px;color:#0b0b1a;vertical-align:2px}
+.t-blob{background:var(--blob)} .t-tree{background:var(--tree)} .t-commit{background:var(--commit)} .t-ref{background:var(--ref)} .t-head{background:var(--head);color:#fff} .t-index{background:#7aa7ff} .t-work{background:#c9c9d9} .t-info{background:#3a3a5c;color:var(--fg)}
+#form{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 14px;border-top:3px solid var(--line);background:#08081a}
+#prompt{color:var(--blob);font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#cmd{flex:1;min-width:160px;background:transparent;border:none;color:var(--fg);font-family:var(--vt);font-size:22px;caret-color:var(--blob);outline:none}
+#form:focus-within{box-shadow:inset 0 0 0 2px var(--blob)}
+
+/* panel */
+.panel{display:flex;flex-direction:column}
+.tabs{display:flex;border-bottom:3px solid var(--line)}
+.tab{flex:1 1 0;min-width:0;padding:12px 2px 10px;background:none;border:none;border-right:3px solid var(--line);font-family:var(--px);font-size:8px;color:var(--mut)}
+.tab:last-child{border-right:none}
+.tab[aria-selected="true"]{background:var(--bg2);color:var(--commit)}
+.tabpane{padding:16px;display:flex;flex-direction:column;gap:14px}
+.eyebrow{font-family:var(--px);font-size:10px;color:var(--ref);letter-spacing:1px}
+.tabpane h2{font-family:var(--px);font-size:16px;line-height:1.5;color:var(--blob);font-weight:400;text-wrap:balance}
+.tabpane h3{font-family:var(--px);font-size:10px;color:var(--commit);font-weight:400;letter-spacing:1px;line-height:1.6}
+.muted{color:var(--mut)}
+#mGoals{list-style:none;padding:0;display:flex;flex-direction:column;gap:8px}
+#mGoals li{display:flex;gap:10px;align-items:flex-start}
+#mGoals li::before{content:"";flex:none;width:16px;height:16px;margin-top:3px;border:3px solid var(--mut)}
+#mGoals li.ok{color:var(--blob)}
+#mGoals li.ok::before{background:var(--blob);border-color:var(--blob);box-shadow:inset 0 0 0 2px var(--bg3)}
+.row{display:flex;flex-wrap:wrap;gap:10px}
+.btn{font-family:var(--px);font-size:10px;line-height:1.4;padding:10px 12px 9px;background:var(--bg2);border:3px solid var(--fg);box-shadow:4px 4px 0 #000}
+.btn.primary{background:var(--blob);color:#071a03;border-color:var(--blob)}
+.btn:disabled{opacity:.4;box-shadow:none}
+.btn:not(:disabled):active{transform:translate(2px,2px);box-shadow:2px 2px 0 #000}
+#hints{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-family:var(--vt);font-size:19px;padding:3px 10px;background:#08081a;border:2px dashed var(--blob);color:var(--blob);text-align:left}
+
+/* inspector */
+#insp svg{width:100%;height:auto;display:block}
+#insp .cap{font-size:19px}
+#insp .cap b{color:var(--commit);font-weight:400}
+.bx{stroke-width:3}
+.bx.commit{fill:#2b2408;stroke:var(--commit)} .bx.tree{fill:#06282d;stroke:var(--tree)} .bx.blob{fill:#0d2a07;stroke:var(--blob)}
+#insp text{font-family:var(--vt);text-anchor:middle;fill:var(--fg)}
+.bt{font-family:var(--px)!important;font-size:9px} .bt.c{fill:var(--commit)!important} .bt.t{fill:var(--tree)!important}
+.bh{font-size:19px} .bh.small{font-size:15px;fill:var(--blob)!important} .bs{font-size:15px;fill:var(--mut)!important} .bn{font-size:16px}
+.flow{fill:none;stroke-width:3;stroke-dasharray:6 5;animation:flow 1s linear infinite}
+.flow.fc{stroke:var(--commit)} .flow.ft{stroke:var(--tree)}
+@keyframes flow{to{stroke-dashoffset:-22}}
+.tablewrap{overflow-x:auto}
+#worlds{width:100%;border-collapse:collapse;font-size:19px;font-variant-numeric:tabular-nums}
+#worlds th{font-family:var(--px);font-size:8px;font-weight:400;text-align:left;padding:6px;color:var(--mut);border-bottom:2px solid var(--line)}
+#worlds td{padding:4px 6px;border-bottom:1px solid var(--line)}
+#worlds .fname{color:var(--fg);word-break:break-all} #worlds .diff{color:var(--head)} #worlds .staged{color:var(--blob)}
+#refs{list-style:none;padding:0;display:flex;flex-direction:column;gap:6px;font-size:18px}
+#refs li{display:flex;flex-direction:column;background:#08081a;border-left:4px solid var(--ref);padding:4px 8px}
+#refs .rk{color:var(--mut)} #refs .rv{color:var(--commit);word-break:break-all} #refs .rv.head{color:var(--head)}
+#objCount{color:var(--mut);font-size:18px}
+
+/* commands */
+#cmdlist{display:flex;flex-direction:column;gap:8px}
+details.cmd{background:#08081a;border:2px solid var(--line)}
+details.cmd[open]{border-color:var(--tree)}
+details.cmd summary{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;padding:8px 10px;cursor:pointer;list-style:none}
+details.cmd summary::-webkit-details-marker{display:none}
+details.cmd summary::before{content:"▶";color:var(--tree);font-size:14px}
+details.cmd[open] summary::before{content:"▼"}
+details.cmd code{font-family:var(--vt);color:var(--blob);font-size:21px}
+details.cmd summary span{color:var(--mut)}
+details.cmd dl{padding:0 12px 12px;display:flex;flex-direction:column;gap:4px;margin:0}
+details.cmd dt{font-family:var(--px);font-size:8px;color:var(--ref);margin-top:8px;letter-spacing:1px}
+details.cmd dd{margin:0;font-size:19px}
+details.cmd dd.ex{color:var(--commit)}
+
+/* speed */
+.track{display:flex;flex-direction:column;gap:6px}
+.track code{color:var(--fg)}
+.bar{height:22px;background:#08081a;border:3px solid var(--line);position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;width:0}
+#barSlow{background:repeating-linear-gradient(90deg,var(--head) 0 10px,#8a1f1f 10px 14px)}
+#barFast{background:repeating-linear-gradient(90deg,var(--blob) 0 10px,#1c7a0a 10px 14px)}
+.track small{font-size:18px;color:var(--mut);min-height:1.2em}
+#benchOut{font-size:19px;color:var(--tree)}
+.facts{display:flex;flex-direction:column;gap:8px;padding-left:18px;margin:0}
+
+/* ranking */
+.rank{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px;font-variant-numeric:tabular-nums}
+.rank li{display:flex;gap:12px;align-items:baseline;padding:4px 8px;background:#08081a;border-left:4px solid var(--line)}
+.rank li:first-child{border-left-color:var(--commit)}
+.rank li.me{border-left-color:var(--blob);background:#0d2a07}
+.rpos{font-family:var(--px);font-size:10px;color:var(--commit)}
+.rname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rtime{font-family:var(--px);font-size:10px;color:var(--tree)}
+
+.ranklabel{font-family:var(--px);font-size:8px;color:var(--mut);letter-spacing:1px;margin-bottom:6px!important}
+.admin{border-color:var(--commit);padding:16px}
+#adminForm{display:flex;flex-direction:column;gap:6px}
+#adminForm label{font-family:var(--px);font-size:8px;color:var(--tree);margin-top:4px}
+#adminForm input{font-family:var(--vt);font-size:20px;padding:6px 8px;background:#08081a;color:var(--fg);border:2px solid var(--line)}
+#adminForm input:focus{outline:none;border-color:var(--blob)}
+#adminForm .btn{margin-top:8px}
+#adminMsg{color:var(--commit);min-height:1.2em}
+
+/* overlays */
+.overlay{position:fixed;inset:0;background:rgba(5,5,16,.9);display:flex;align-items:center;justify-content:center;padding:16px;z-index:40;overflow-y:auto}
+.overlay.full{background:var(--bg);align-items:flex-start;padding-block:24px}
+.wbox{max-width:560px;width:100%;margin:auto;background:var(--bg2);border:5px solid var(--commit);box-shadow:10px 10px 0 #000;padding:28px;display:flex;flex-direction:column;gap:16px;text-align:center;align-items:center}
+#winTitle{font-family:var(--px);font-size:24px;color:var(--blob);text-shadow:4px 4px 0 var(--ref);font-weight:400;line-height:1.4}
+#winStars{font-size:56px;color:var(--commit);letter-spacing:6px;line-height:1}
+#winPts,#winTime{font-family:var(--px);font-size:10px;color:var(--fg);line-height:1.8}
+#winTime{color:var(--head)} #winTime.final{color:var(--blob)}
+#winLearn{font-size:21px;color:var(--fg)}
+.overlay:not([hidden]) .wbox{animation:pop .45s steps(5)}
+
+.startbox{max-width:1000px;width:100%;margin:auto;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px}
+@media (max-width:820px){.startbox{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--bg3);border:4px solid var(--line);box-shadow:6px 6px 0 #000;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.hero{align-items:center;text-align:center;border-color:var(--ref)}
+.hero img{width:min(240px,70%);height:auto}
+.hero h1{font-family:var(--px);font-weight:400;font-size:clamp(26px,5vw,44px);line-height:1.3;color:var(--blob);text-shadow:5px 5px 0 var(--ref);margin:0}
+.hero .ev{font-family:var(--px);font-size:11px;line-height:1.8;color:var(--commit)}
+.hero .talk{font-size:22px;color:var(--mut)}
+#startForm{display:flex;flex-direction:column;gap:10px;width:100%;text-align:left}
+#startForm label{font-family:var(--px);font-size:10px;color:var(--tree)}
+#pname{width:100%;font-family:var(--px);font-size:16px;padding:14px 12px;background:#08081a;color:var(--blob);border:3px solid var(--tree);caret-color:var(--blob)}
+#pname:focus{outline:none;box-shadow:0 0 0 3px var(--blob)}
+#nameErr{color:var(--head);min-height:1.2em;font-size:19px}
+.press{font-size:14px;padding:14px;width:100%}
+.press:not(:disabled){animation:blink 1.2s steps(2) infinite}
+#newConfirm{color:var(--commit);font-size:19px}
+.rules{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.rules li{display:flex;gap:10px;align-items:baseline}
+.rules li b{flex:none;font-family:var(--px);font-size:9px;color:var(--ref);font-weight:400;width:72px}
+
+.certbox{max-width:1000px;width:100%;margin:auto;display:flex;flex-direction:column;gap:16px}
+#certImg{width:100%;height:auto;display:block;border:4px solid var(--line);box-shadow:8px 8px 0 #000;background:var(--bg)}
+#certCanvas{display:none}
+#certMsg{color:var(--blob);min-height:1.2em}
+
+@media (max-width:600px){
+  .logo{font-size:12px}
+  .brand img{height:34px}
+  .stat b{font-size:10px} .stat.time b{font-size:13px}
+  #out{height:280px}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+
+<div class="wrap">
+  <header class="hud">
+    <div class="brand"><img id="logoSrc" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAADaCAMAAAArH4/3AAACWFBMVEUYnuWeISYdYOQVElvpGlAUE6Nh3vmrVicQIeb0FpwHW+ufCmHxZUwZJuMTH5Lukk8eC2XQIysMYqljEx/wD2NZIO+jCVL6E+5oAR06AzaS4fsLE1sCRqZTA6fZlitcARtUpfYD7P9gAUxUV/YMnf4ACYVaCZpsB2nPUyr9jf6kAiX89RohFHeeD5H73WjnAiEPkbNgFO08AjxG+f8MyNr1VeLIEP7/3f+hDu2UWOuiEvD+/YdZAUqYoPbwF4v/R6i0VkdOXf+CABywhiNVnP+nTfxzDR0AAYCM8v/2tZGRkv/S6v1AAUHQnPzRbv06GAA8IgAFQXoTUHkA/wB3QiR/RGFCY7dXnqb/RxkAAAD6FjP5Cy8XCK9PAioyFvb6JjUYI8gN/P0WIbhUATEVG7VOAS/++zH9+01oATEkBs5tAilLAisNBJNKASgtCfAu/P1vA0yPBCsaB8gGBW/4NzRPAUlZATgBF28BFmp1Ajf86EsM5/SOA0mvAytKJfr+/GsAF2cyAlP5RjMYGckIBnAN2PP75zQFBm73pzL4VzMNCHIBJnItJvMz5vsDBmsAFmMwAU2NATVN/P32mDMkFNQiBrXMBS0QyPRGGfr4tzT6xzT710v71zL3hjL+R/z4dzMCKI/4ZzMtA2n7yErzBUwBN5ERt/MCGnizBU8IBosv2PhVAhz4t0ryAWoBF1srN/UvyfbxBmhNA2v5qEpK5vtFAUPJaC8aKO0HOXCyC/sBI2UDR5EEKK7Qdi8HGZMtt/QBFoYuAUnQBlNrBBwORXNYBFIBI1sAE2ITgVMkAAAAyHRSTlP////s/yv//xcLERr/////Yf//8A///wZm4v+mIP//oP8F//8JZB0k/wMl/zoU/xT/D6gD/wf/A///C/9B//8I/whC/wYIM4YD/wX/g///FVMv/wf///8OAwD////6//////9w/47//0z//67/zv//MP//+P9MVnH8OP//JP///49w//+Q//+s//9yTv//z62OLf///////////////wP/M/9O//8r/1YaTv/4///1//8PMf//a/////9s/yX/Nv9IrRX//zmNzJAPe2kAAGzaSURBVHja3b2HQxtXuj6sUQcJhBDVOIALxRjbcdtkU252997dW39f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" alt="Unisanta"><div class="logo">GIT<span>ARCADE</span></div></div>
+    <div class="stat"><small>PLAYER</small><b id="hudName">—</b></div>
+    <div class="stat time"><small>TEMPO</small><b id="hudTime">00:00.0</b></div>
+    <div class="stat"><small>WORLD</small><b id="hudLevel">1-1</b></div>
+    <div class="stat"><small>SCORE</small><b id="hudScore">000000</b></div>
+    <div class="stat"><small>CMDS/PAR</small><b id="hudCmds">0/0</b></div>
+    <div class="stat"><small>DICAS</small><b id="hudHints">◆◆◆</b></div>
+    <div class="stat speed"><small>ÚLTIMO COMANDO</small><b id="hudSpeed">—</b></div>
+    <button class="btn small" id="btnMenu" type="button">MENU</button>
+  </header>
+
+  <nav class="levels" id="levels" aria-label="Fases"></nav>
+
+  <main class="grid">
+    <div class="col">
+      <section class="screen" aria-label="Grafo de commits">
+        <div class="stitle"><b>GRAFO DE COMMITS</b><span>setas apontam para o parent · clique num commit para inspecionar</span></div>
+        <div class="gscroll" id="gscroll"><div class="graph" id="graph"><svg id="edges" aria-hidden="true"></svg></div></div>
+        <div class="legend">
+          <span><i style="background:var(--commit)"></i>commit</span>
+          <span><i style="background:var(--ref)"></i>branch (ponteiro)</span>
+          <span><i style="background:var(--head)"></i>HEAD (você está aqui)</span>
+          <span><i style="border:2px dashed #6b6b8f"></i>órfão</span>
+        </div>
+      </section>
+      <section class="screen term" aria-label="Terminal">
+        <div class="stitle"><b>TERMINAL</b><span>↑ ↓ histórico · help</span></div>
+        <div id="out" role="log" aria-live="polite"></div>
+        <form id="form"><label for="cmd" id="prompt">$</label><input id="cmd" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="git status"></form>
+      </section>
+    </div>
+
+    <aside class="screen panel">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-tab="missao" type="button">MISSÃO</button>
+        <button class="tab" role="tab" data-tab="mundos" type="button">.GIT</button>
+        <button class="tab" role="tab" data-tab="cmds" type="button">GUIA</button>
+        <button class="tab" role="tab" data-tab="speed" type="button">SPEED</button>
+        <button class="tab" role="tab" data-tab="rank" type="button">RANK</button>
+      </div>
+
+      <div class="tabpane" id="pane-missao" role="tabpanel">
+        <p class="eyebrow" id="mId">WORLD 1-1</p>
+        <h2 id="mName">PRIMEIRO SAVE</h2>
+        <p id="mStory"></p>
+        <h3>OBJETIVOS</h3>
+        <ul id="mGoals"></ul>
+        <p class="muted" id="mPar"></p>
+        <div class="row">
+          <button class="btn" id="btnHint" type="button">USAR DICA</button>
+          <button class="btn" id="btnReset" type="button">REINICIAR FASE</button>
+        </div>
+        <div id="hints" hidden></div>
+        <p class="muted">Só 3 dicas no jogo todo. Uma dica comprada fica liberada naquela fase. Clique num comando da dica para colá-lo no terminal.</p>
+      </div>
+
+      <div class="tabpane" id="pane-mundos" role="tabpanel" hidden>
+        <h3>COMMIT → TREE → BLOBS</h3>
+        <div id="insp"></div>
+        <h3>OS 3 MUNDOS (hash de cada arquivo)</h3>
+        <div class="tablewrap"><table id="worlds"><thead><tr><th>ARQUIVO</th><th>PASTA</th><th>STAGE</th><th>HEAD</th></tr></thead><tbody></tbody></table></div>
+        <p class="muted">Vermelho: pasta ≠ stage (falta git add). Verde: stage ≠ HEAD (vai no próximo commit).</p>
+        <h3>PONTEIROS</h3>
+        <ul id="refs"></ul>
+        <p id="objCount"></p>
+      </div>
+
+      <div class="tabpane" id="pane-cmds" role="tabpanel" hidden>
+        <h3>GUIA DE COMANDOS</h3>
+        <p class="muted">Para cada um: o que faz e o que acontece dentro da .git.</p>
+        <div id="cmdlist"></div>
+        <p class="muted">Referência oficial: <a href="https://git-scm.com/docs" style="color:var(--tree)">git-scm.com/docs</a></p>
+      </div>
+
+      <div class="tabpane" id="pane-speed" role="tabpanel" hidden>
+        <h3>CORRIDA: NOVA VERSÃO DO PROJETO</h3>
+        <div class="track"><code>cp -r jogo/ jogo_v2/</code><div class="bar"><i id="barSlow"></i></div><small id="lblSlow"></small></div>
+        <div class="track"><code>git branch v2</code><div class="bar"><i id="barFast"></i></div><small id="lblFast"></small></div>
+        <button class="btn primary" id="btnRace" type="button">▶ CORRER</button>
+        <h3>SHA-1 DE VERDADE NO SEU PC</h3>
+        <button class="btn" id="btnBench" type="button">HASHEAR 2.000 BLOBS</button>
+        <p id="benchOut" aria-live="polite"></p>
+        <h3>POR QUE O GIT É RÁPIDO</h3>
+        <ul class="facts">
+          <li>Branch = arquivo de 41 bytes. Nada é copiado.</li>
+          <li>Tudo é local: log, diff, commit e branch não usam rede.</li>
+          <li>Arquivo que não mudou tem o mesmo hash e é reaproveitado.</li>
+          <li>Merge fast-forward só move um ponteiro.</li>
+        </ul>
+        <p class="muted">A barra da cópia é uma ilustração. O tempo do git branch é medido de verdade no simulador.</p>
+      </div>
+
+      <div class="tabpane" id="pane-rank" role="tabpanel" hidden>
+        <h3>RANKING DA SALA · MENOR TEMPO</h3>
+        <div class="rankbox"><p class="muted">Carregando ranking…</p></div>
+        <p class="muted">Entra no ranking quem derrota o boss com todas as fases resolvidas. Jogou em outro link ou sem login? Mostre o certificado ao palestrante.</p>
+        <section id="admin" class="card admin" hidden>
+          <h3>MODO PALESTRANTE</h3>
+          <p class="muted">Lance o resultado de um certificado. O código "commit" do certificado confirma o nome e o tempo.</p>
+          <form id="adminForm" autocomplete="off">
+            <label for="aName">NOME</label><input id="aName" type="text" maxlength="24" placeholder="Como está no certificado">
+            <label for="aTime">TEMPO</label><input id="aTime" type="text" inputmode="decimal" placeholder="12:34.5">
+            <label for="aCode">CÓDIGO</label><input id="aCode" type="text" maxlength="7" placeholder="a1b2c3d">
+            <button class="btn primary" type="submit">LANÇAR NO RANKING</button>
+          </form>
+          <p id="adminMsg" aria-live="polite"></p>
+        </section>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<div class="overlay full" id="start" hidden>
+  <div class="startbox">
+    <section class="card hero" aria-label="Tela inicial">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAADaCAMAAAArH4/3AAACWFBMVEUYnuWeISYdYOQVElvpGlAUE6Nh3vmrVicQIeb0FpwHW+ufCmHxZUwZJuMTH5Lukk8eC2XQIysMYqljEx/wD2NZIO+jCVL6E+5oAR06AzaS4fsLE1sCRqZTA6fZlitcARtUpfYD7P9gAUxUV/YMnf4ACYVaCZpsB2nPUyr9jf6kAiX89RohFHeeD5H73WjnAiEPkbNgFO08AjxG+f8MyNr1VeLIEP7/3f+hDu2UWOuiEvD+/YdZAUqYoPbwF4v/R6i0VkdOXf+CABywhiNVnP+nTfxzDR0AAYCM8v/2tZGRkv/S6v1AAUHQnPzRbv06GAA8IgAFQXoTUHkA/wB3QiR/RGFCY7dXnqb/RxkAAAD6FjP5Cy8XCK9PAioyFvb6JjUYI8gN/P0WIbhUATEVG7VOAS/++zH9+01oATEkBs5tAilLAisNBJNKASgtCfAu/P1vA0yPBCsaB8gGBW/4NzRPAUlZATgBF28BFmp1Ajf86EsM5/SOA0mvAytKJfr+/GsAF2cyAlP5RjMYGckIBnAN2PP75zQFBm73pzL4VzMNCHIBJnItJvMz5vsDBmsAFmMwAU2NATVN/P32mDMkFNQiBrXMBS0QyPRGGfr4tzT6xzT710v71zL3hjL+R/z4dzMCKI/4ZzMtA2n7yErzBUwBN5ERt/MCGnizBU8IBosv2PhVAhz4t0ryAWoBF1srN/UvyfbxBmhNA2v5qEpK5vtFAUPJaC8aKO0HOXCyC/sBI2UDR5EEKK7Qdi8HGZMtt/QBFoYuAUnQBlNrBBwORXNYBFIBI1sAE2ITgVMkAAAAyHRSTlP////s/yv//xcLERr/////Yf//8A///wZm4v+mIP//oP8F//8JZB0k/wMl/zoU/xT/D6gD/wf/A///C/9B//8I/whC/wYIM4YD/wX/g///FVMv/wf///8OAwD////6//////9w/47//0z//67/zv//MP//+P9MVnH8OP//JP///49w//+Q//+s//9yTv//z62OLf///////////////wP/M/9O//8r/1YaTv/4///1//8PMf//a/////9s/yX/Nv9IrRX//zmNzJAPe2kAAGzaSURBVHja3b2HQxtXuj6sUQcJhBDVOIALxRjbcdtkU252997dW39f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" alt="Logo Unisanta">
+      <h1>GIT ARCADE</h1>
+      <p class="ev">SEMANA DE TECNOLOGIA · UNISANTA</p>
+      <p class="talk">Entendendo Git: um guia de versionamento</p>
+      <form id="startForm" novalidate>
+        <label for="pname">NOME DO PLAYER</label>
+        <input id="pname" type="text" maxlength="24" autocomplete="name" placeholder="Seu nome" required>
+        <p id="nameErr" aria-live="polite"></p>
+        <p id="newConfirm" hidden>Já existe um jogo em andamento neste navegador. Clique de novo em PRESS START para começar outro do zero.</p>
+        <button class="btn primary press" type="submit">&gt; PRESS START &lt;</button>
+      </form>
+      <div id="continueBox" class="row" hidden style="flex-direction:column;align-items:center;width:100%">
+        <p class="muted" id="continueInfo"></p>
+        <button class="btn" id="btnContinue" type="button">CONTINUAR JOGO</button>
+      </div>
+    </section>
+    <div class="col">
+      <section class="card">
+        <h3 style="font-family:var(--px);font-size:11px;color:var(--commit);font-weight:400;margin:0">COMO JOGAR</h3>
+        <ul class="rules">
+          <li><b>9 FASES</b><span>Liberadas em sequência. A última é o BOSS: um conflito de merge.</span></li>
+          <li><b>TEMPO</b><span>O cronômetro começa no PRESS START e só para quando o boss cai.</span></li>
+          <li><b>DICAS</b><span>3 para o jogo inteiro. Use com sabedoria.</span></li>
+          <li><b>PONTOS</b><span>1000 por fase, menos 150 por comando além do par. Consultas são grátis.</span></li>
+          <li><b>PRÊMIO</b><span>Certificado de lembrança com seu nome e seu tempo.</span></li>
+        </ul>
+      </section>
+      <section class="card">
+        <h3 style="font-family:var(--px);font-size:11px;color:var(--commit);font-weight:400;margin:0">TOP 10 DA SALA</h3>
+        <div class="rankbox"><p class="muted">Carregando ranking…</p></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="win" hidden>
+  <div class="wbox" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+    <h2 id="winTitle">STAGE CLEAR!</h2>
+    <p id="winStars">★★★</p>
+    <p id="winPts"></p>
+    <p id="winTime"></p>
+    <p id="winLearn"></p>
+    <div class="row" style="justify-content:center">
+      <button class="btn primary" id="winNext" type="button">PRÓXIMA FASE ▶</button>
+      <button class="btn" id="winStay" type="button">FICAR AQUI</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay full" id="cert" hidden>
+  <div class="certbox" role="dialog" aria-modal="true" aria-label="Certificado">
+    <img id="certImg" alt="Certificado de participação do Git Arcade">
+    <canvas id="certCanvas" aria-hidden="true"></canvas>
+    <div class="row">
+      <button class="btn primary" id="btnDownload" type="button" hidden>BAIXAR PNG</button>
+      <button class="btn" id="btnCloseCert" type="button">VOLTAR AO JOGO</button>
+      <button class="btn" id="btnNewRun" type="button">NOVO PLAYER</button>
+    </div>
+    <p id="certTip" class="muted"></p>
+    <p id="certMsg" aria-live="polite"></p>
+    <section class="card">
+      <h3 style="font-family:var(--px);font-size:11px;color:var(--commit);font-weight:400;margin:0">TOP 10 DA SALA</h3>
+      <div class="rankbox"><p class="muted">Carregando ranking…</p></div>
+    </section>
+  </div>
+</div>
+
+<script>
+// ===== SHA-1 (real) =====
+const enc = new TextEncoder();
+const blen = s => enc.encode(s).length;
+function sha1(msg){
+  const b = enc.encode(msg), l = b.length;
+  const n = (((l + 8) >> 6) + 1) << 4;
+  const w = new Array(n).fill(0);
+  for (let i = 0; i < l; i++) w[i >> 2] |= b[i] << (24 - (i % 4) * 8);
+  w[l >> 2] |= 0x80 << (24 - (l % 4) * 8);
+  w[n - 1] = l * 8;
+  let h0=0x67452301,h1=0xEFCDAB89,h2=0x98BADCFE,h3=0x10325476,h4=0xC3D2E1F0;
+  const W = new Array(80);
+  for (let i = 0; i < n; i += 16){
+    for (let t = 0; t < 16; t++) W[t] = w[i + t] | 0;
+    for (let t = 16; t < 80; t++){ const x = W[t-3]^W[t-8]^W[t-14]^W[t-16]; W[t] = (x << 1) | (x >>> 31); }
+    let a=h0,bb=h1,c=h2,d=h3,e=h4;
+    for (let t = 0; t < 80; t++){
+      let f,k;
+      if (t < 20){ f = (bb & c) | (~bb & d); k = 0x5A827999; }
+      else if (t < 40){ f = bb ^ c ^ d; k = 0x6ED9EBA1; }
+      else if (t < 60){ f = (bb & c) | (bb & d) | (c & d); k = 0x8F1BBCDC; }
+      else { f = bb ^ c ^ d; k = 0xCA62C1D6; }
+      const tmp = (((a << 5) | (a >>> 27)) + f + e + k + W[t]) | 0;
+      e = d; d = c; c = (bb << 30) | (bb >>> 2); bb = a; a = tmp;
+    }
+    h0=(h0+a)|0; h1=(h1+bb)|0; h2=(h2+c)|0; h3=(h3+d)|0; h4=(h4+e)|0;
+  }
+  return [h0,h1,h2,h3,h4].map(x => (x >>> 0).toString(16).padStart(8,'0')).join('');
+}
+const short = h => h ? h.slice(0,7) : '(vazio)';
+
+class GitErr extends Error {}
+
+// ===== Simulated Git =====
+class Git {
+  constructor(){
+    this.objects = new Map(); this.refs = {}; this.head = {type:'ref', name:'main'};
+    this.index = {}; this.work = {}; this.reflog = []; this.merging = null;
+    this.seq = 0; this.order = []; this.lane = {}; this.laneTaken = {}; this.maxLane = -1;
+    this.stash = []; this.flags = {}; this.resetStats();
+  }
+  resetStats(){ this.ops = []; this.out = []; this.newBytes = 0; this.newCount = 0; }
+  op(t, txt){ this.ops.push({t, txt}); }
+  print(txt, cls){ this.out.push([txt, cls || '']); }
+  put(type, data, body){
+    const raw = `${type} ${blen(body)}\0${body}`;
+    const h = sha1(raw);
+    if (!this.objects.has(h)){ this.objects.set(h, {type, data, body}); this.newBytes += blen(raw); this.newCount++; return [h, true]; }
+    return [h, false];
+  }
+  hashOf(content){ return content === undefined ? undefined : sha1(`blob ${blen(content)}\0${content}`); }
+  writeBlob(content, name){
+    const [h, isNew] = this.put('blob', content, content);
+    this.op('BLOB', isNew ? `${short(h)} criado em .git/objects/${h.slice(0,2)}/ (${name})` : `${short(h)} já existe, reaproveitado (${name})`);
+    return h;
+  }
+  writeTree(map){
+    const names = Object.keys(map).sort();
+    const body = names.map(n => `100644 blob ${map[n]}\t${n}`).join('\n') + (names.length ? '\n' : '');
+    const [h, isNew] = this.put('tree', {...map}, body);
+    this.op('TREE', isNew ? `${short(h)} criada: ${names.length} arquivo(s)` : `${short(h)} já existe, reaproveitada`);
+    return h;
+  }
+  writeCommit(tree, parents, msg){
+    this.seq++;
+    const t = 1790880000 + this.seq * 97;
+    let body = `tree ${tree}\n`;
+    parents.forEach(p => body += `parent ${p}\n`);
+    body += `author Aluno <aluno@unisanta.br> ${t} -0300\ncommitter Aluno <aluno@unisanta.br> ${t} -0300\n\n${msg}\n`;
+    const [h, isNew] = this.put('commit', {tree, parents, msg, seq: this.seq}, body);
+    if (isNew){
+      this.order.push(h);
+      const p = parents[0];
+      let lane;
+      if (p !== undefined && !this.laneTaken[p]){ lane = this.lane[p]; this.laneTaken[p] = true; }
+      else if (p === undefined && this.maxLane < 0){ lane = 0; }
+      else { lane = this.maxLane + 1; if (p !== undefined) this.laneTaken[p] = true; }
+      this.maxLane = Math.max(this.maxLane, lane);
+      this.lane[h] = lane;
+    }
+    this.op('COMMIT', `${short(h)} criado → tree ${short(tree)}` + (parents.length ? `, parent ${parents.map(short).join(' + ')}` : ', sem parent (raiz)'));
+    return h;
+  }
+  obj(h){ return this.objects.get(h); }
+  headCommit(){ return this.head.type === 'ref' ? this.refs[this.head.name] : this.head.hash; }
+  treeOf(c){ if (!c) return {}; return this.obj(this.obj(c).data.tree).data; }
+  content(b){ return b === undefined ? undefined : this.obj(b).data; }
+  parents(c){ return c ? this.obj(c).data.parents : []; }
+  branchLabel(){ return this.head.type === 'ref' ? this.head.name : 'HEAD detached em ' + short(this.head.hash); }
+
+  moveHead(nh, msg){
+    const old = this.headCommit();
+    if (this.head.type === 'ref'){
+      this.refs[this.head.name] = nh;
+      this.op('REF', `refs/heads/${this.head.name}: ${short(old)} → ${short(nh)} (41 bytes reescritos)`);
+    } else {
+      this.head.hash = nh;
+      this.op('HEAD', `HEAD (detached): ${short(old)} → ${short(nh)}`);
+    }
+    this.reflog.unshift({h: nh, msg});
+  }
+
+  // ---- status helpers
+  staged(){ const ht = this.treeOf(this.headCommit()); const s = new Set([...Object.keys(ht), ...Object.keys(this.index)]); return [...s].filter(n => ht[n] !== this.index[n]).sort(); }
+  unstaged(){ return Object.keys(this.index).filter(n => this.hashOf(this.work[n]) !== this.index[n]).sort(); }
+  untracked(){ return Object.keys(this.work).filter(n => !(n in this.index)).sort(); }
+  isDirty(){ return this.staged().length > 0 || this.unstaged().length > 0; }
+
+  // move HEAD's view to a new commit, carrying uncommitted changes (like git switch)
+  carryTo(target){
+    const ht = this.treeOf(this.headCommit()), tt = this.treeOf(target);
+    const names = new Set([...Object.keys(ht), ...Object.keys(tt), ...Object.keys(this.index), ...Object.keys(this.work)]);
+    for (const n of names){
+      const dirty = this.index[n] !== ht[n] || this.hashOf(this.work[n]) !== this.index[n];
+      const tracked = n in this.index || n in ht;
+      if (!tracked && n in this.work && tt[n] !== undefined && this.hashOf(this.work[n]) !== tt[n])
+        throw new GitErr(`o arquivo não rastreado '${n}' seria sobrescrito. Mova ou apague antes.`);
+      if (dirty && tracked && tt[n] !== ht[n])
+        throw new GitErr(`suas mudanças em '${n}' seriam perdidas. Faça commit ou git stash antes.`);
+    }
+    const ni = {...this.index}, nw = {...this.work};
+    for (const n of names){
+      if (!(n in this.index) && !(n in ht)){ if (tt[n] !== undefined){ ni[n] = tt[n]; nw[n] = this.content(tt[n]); } continue; }
+      const stagedClean = this.index[n] === ht[n];
+      const workClean = this.hashOf(this.work[n]) === this.index[n];
+      if (stagedClean){ if (tt[n] === undefined) delete ni[n]; else ni[n] = tt[n]; }
+      if (stagedClean && workClean){ if (tt[n] === undefined) delete nw[n]; else nw[n] = this.content(tt[n]); }
+    }
+    this.index = ni; this.work = nw;
+    this.op('WORK', `arquivos da pasta atualizados para ${short(target)}`);
+  }
+  hardTo(target){
+    const tt = this.treeOf(target);
+    for (const n of Object.keys(this.index)) if (!(n in tt)) delete this.work[n];
+    for (const n of Object.keys(tt)) this.work[n] = this.content(tt[n]);
+    this.index = {...tt};
+  }
+
+  // ---- revision parsing
+  findObj(prefix){
+    if (!/^[0-9a-f]{4,40}$/.test(prefix)) return null;
+    const m = [...this.objects.keys()].filter(h => h.startsWith(prefix));
+    if (m.length > 1) throw new GitErr(`hash ambíguo: ${prefix}`);
+    return m[0] || null;
+  }
+  resolve(spec, quiet){
+    const m = spec.match(/^([^~^]+)((?:~\d*|\^\d*)*)$/);
+    if (!m){ if (quiet) return null; throw new GitErr(`revisão inválida: ${spec}`); }
+    let base = m[1], c;
+    const rl = base.match(/^HEAD@\{(\d+)\}$/);
+    if (rl){ const e = this.reflog[+rl[1]]; c = e && e.h; }
+    else if (base === 'HEAD') c = this.headCommit();
+    else if (base in this.refs) c = this.refs[base];
+    else { const h = this.findObj(base); if (h && this.obj(h).type === 'commit') c = h; }
+    if (!c){ if (quiet) return null; throw new GitErr(`não encontrei '${spec}' (branch, hash ou HEAD~n)`); }
+    const steps = m[2].match(/~\d*|\^\d*/g) || [];
+    for (const s of steps){
+      const num = s.length > 1 ? +s.slice(1) : 1;
+      if (s[0] === '~'){ for (let i = 0; i < num; i++){ c = this.parents(c)[0]; if (!c) throw new GitErr(`'${spec}' vai além do primeiro commit`); } }
+      else { c = num === 0 ? c : this.parents(c)[num - 1]; if (!c) throw new GitErr(`'${spec}': esse parent não existe`); }
+    }
+    return c;
+  }
+  ancestors(c){ const s = new Set(), st = c ? [c] : []; while (st.length){ const x = st.pop(); if (s.has(x)) continue; s.add(x); st.push(...this.parents(x)); } return s; }
+  mergeBase(a, b){ const A = this.ancestors(a); let best = null; for (const x of this.ancestors(b)) if (A.has(x) && (!best || this.obj(x).data.seq > this.obj(best).data.seq)) best = x; return best; }
+  reachable(){ const s = new Set(); const st = [...Object.values(this.refs)]; const hc = this.headCommit(); if (hc) st.push(hc); if (this.merging) st.push(this.merging.theirs); while (st.length){ const x = st.pop(); if (!x || s.has(x)) continue; s.add(x); st.push(...this.parents(x)); } return s; }
+
+  threeWay(baseT, oursT, theirsT){
+    const names = new Set([...Object.keys(baseT), ...Object.keys(oursT), ...Object.keys(theirsT)]);
+    const res = {}, conflicts = [];
+    for (const n of names){
+      const b = baseT[n], o = oursT[n], t = theirsT[n];
+      if (o === t) { if (o !== undefined) res[n] = o; }
+      else if (o === b) { if (t !== undefined) res[n] = t; }
+      else if (t === b) { if (o !== undefined) res[n] = o; }
+      else conflicts.push(n);
+    }
+    return {res, conflicts};
+  }
+
+  // ===== command runner =====
+  run(line){
+    this.resetStats();
+    const toks = []; line.replace(/"([^"]*)"|'([^']*)'|(\S+)/g, (_, a, b, c) => { toks.push(a ?? b ?? c); return ''; });
+    if (!toks.length) return {counted:false};
+    const cmd = toks[0];
+    try {
+      if (cmd === 'echo') return this.cEcho(toks);
+      if (cmd === 'ls'){ const f = Object.keys(this.work).sort(); this.print(f.length ? f.join('   ') : '(pasta vazia)'); return {counted:false}; }
+      if (cmd === 'cat') return this.cCat(toks[1]);
+      if (cmd === 'rm'){ if (!(toks[1] in this.work)) throw new GitErr(`arquivo não existe: ${toks[1]}`); delete this.work[toks[1]]; this.op('WORK', `${toks[1]} apagado da pasta`); return {counted:true}; }
+      if (cmd !== 'git') throw new GitErr(`comando desconhecido: ${cmd}. Digite help.`);
+      const sub = toks[1], a = toks.slice(2);
+      const fn = {
+        status:'cStatus', add:'cAdd', commit:'cCommit', log:'cLog', branch:'cBranch', switch:'cSwitch',
+        checkout:'cCheckout', merge:'cMerge', reset:'cReset', restore:'cRestore', revert:'cRevert',
+        reflog:'cReflog', 'cat-file':'cCatFile', 'hash-object':'cHashObject', rebase:'cRebase', stash:'cStash', diff:'cDiff', init:'cInit'
+      }[sub];
+      if (!fn) throw new GitErr(sub ? `'${sub}' não existe neste simulador. Digite help.` : 'uso: git <comando>');
+      return this[fn](a);
+    } catch (e){
+      if (e instanceof GitErr){ this.print('fatal: ' + e.message, 'err'); this.ops = []; return {counted:true, error:true}; }
+      throw e;
+    }
+  }
+  cInit(){ this.print('Repositório já iniciado em .git/ (o jogo cuidou disso).', 'info'); return {counted:false}; }
+  cEcho(t){
+    const gt = t.findIndex(x => x === '>' || x === '>>');
+    const text = t.slice(1, gt < 0 ? undefined : gt).join(' ');
+    if (gt < 0){ this.print(text); return {counted:false}; }
+    const f = t[gt + 1]; if (!f) throw new GitErr('faltou o nome do arquivo depois de >');
+    if (f.startsWith('.git')) throw new GitErr('nada de mexer na .git na mão! Use comandos git.');
+    if (t[gt] === '>>' && f in this.work) this.work[f] += text + '\n'; else this.work[f] = text + '\n';
+    this.op('WORK', `${f} ${t[gt] === '>>' ? 'recebeu uma linha nova' : 'escrito'} na pasta (ainda fora do Git)`);
+    return {counted:true};
+  }
+  cCat(f){
+    if (f === '.git/HEAD'){ this.print(this.head.type === 'ref' ? `ref: refs/heads/${this.head.name}` : this.head.hash, 'r'); return {counted:false}; }
+    const m = f && f.match(/^\.git\/refs\/heads\/(.+)$/);
+    if (m){ if (!(m[1] in this.refs)) throw new GitErr(`${f}: arquivo não existe`); this.print(this.refs[m[1]], 'y'); this.print('(40 caracteres + quebra de linha = 41 bytes)', 'dim'); return {counted:false}; }
+    if (!(f in this.work)) throw new GitErr(`${f}: arquivo não existe`);
+    this.work[f].replace(/\n$/, '').split('\n').forEach(l => this.print(l, /^(<{7}|={7}|>{7})/.test(l) ? 'err' : ''));
+    return {counted:false};
+  }
+  cStatus(){
+    this.print(this.head.type === 'ref' ? `Na branch ${this.head.name}` : `HEAD detached em ${short(this.head.hash)}`, this.head.type === 'ref' ? 'm' : 'err');
+    if (!this.headCommit()) this.print('Ainda sem commits', 'dim');
+    if (this.merging) this.print(`Merge em andamento com '${this.merging.name}'. Resolva, git add e git commit (ou git merge --abort).`, 'err');
+    const s = this.staged(), u = this.unstaged(), n = this.untracked();
+    if (s.length){ this.print('Mudanças no stage (vão no próximo commit):', 'ok'); s.forEach(f => this.print('    ' + (this.index[f] === undefined ? 'apagado: ' : 'modificado: ') + f, 'ok')); }
+    if (u.length){ this.print('Mudanças fora do stage (use git add):', 'err'); u.forEach(f => this.print('    modificado: ' + f, 'err')); }
+    if (n.length){ this.print('Arquivos não rastreados:', 'err'); n.forEach(f => this.print('    ' + f, 'err')); }
+    if (!s.length && !u.length && !n.length) this.print('nada para commitar, área de trabalho limpa ✓', 'ok');
+    return {counted:false};
+  }
+  cAdd(a){
+    if (!a.length) throw new GitErr('diga o que adicionar: git add arquivo (ou git add .)');
+    let files = [];
+    if (a.includes('.') || a.includes('-A') || a.includes('--all')){
+      files = [...new Set([...Object.keys(this.work), ...Object.keys(this.index)])];
+    } else files = a;
+    let changed = 0;
+    for (const f of files){
+      if (f in this.work){
+        const h = this.hashOf(this.work[f]);
+        if (this.index[f] === h) continue;
+        this.writeBlob(this.work[f], f); this.index[f] = h; changed++;
+        this.op('INDEX', `.git/index: ${f} → blob ${short(h)}`);
+        if (this.work[f].includes('<<<<<<<')) this.print(`aviso: ${f} ainda tem marcadores de conflito!`, 'err');
+      } else if (f in this.index){ delete this.index[f]; changed++; this.op('INDEX', `.git/index: ${f} removido`); }
+      else throw new GitErr(`o caminho '${f}' não corresponde a nenhum arquivo`);
+    }
+    if (!changed) this.print('(nada mudou: o stage já estava igual)', 'dim');
+    return {counted:true};
+  }
+  cCommit(a){
+    let msg = null, all = false;
+    for (let i = 0; i < a.length; i++){
+      if (a[i] === '-m'){ msg = a[++i]; }
+      else if (a[i] === '-am'){ all = true; msg = a[++i]; }
+      else if (a[i] === '-a') all = true;
+    }
+    if (msg == null) throw new GitErr('use git commit -m "mensagem" (o editor não existe aqui)');
+    if (all){ for (const f of Object.keys(this.index)) if (f in this.work && this.hashOf(this.work[f]) !== this.index[f]){ this.writeBlob(this.work[f], f); this.index[f] = this.hashOf(this.work[f]); } }
+    const hc = this.headCommit();
+    if (this.merging){
+      for (const f of this.merging.conflicts){
+        const c = this.content(this.index[f]);
+        if (c === undefined || c.includes('<<<<<<<') || this.index[f] === this.merging.oursBlob[f]) throw new GitErr(`conflito em '${f}' ainda não resolvido. Edite o arquivo e rode git add ${f}.`);
+      }
+    } else if (!this.staged().length){
+      this.print(hc ? 'nada no stage para commitar (use git add)' : 'nada para commitar: rode git add primeiro', 'err');
+      return {counted:true, error:true};
+    }
+    const tree = this.writeTree(this.index);
+    const parents = hc ? [hc] : [];
+    if (this.merging) parents.push(this.merging.theirs);
+    const h = this.writeCommit(tree, parents, msg);
+    this.moveHead(h, (this.merging ? 'commit (merge): ' : hc ? 'commit: ' : 'commit (initial): ') + msg);
+    if (this.merging){ this.print('Conflito resolvido. BOSS DERROTADO!', 'ok'); this.merging = null; }
+    this.print(`[${this.branchLabel()} ${short(h)}] ${msg}`, 'y');
+    return {counted:true};
+  }
+  cLog(a){
+    const all = a.includes('--all');
+    const starts = all ? [...Object.values(this.refs), this.headCommit()] : [this.headCommit()];
+    const seen = this.ancestors(null); starts.filter(Boolean).forEach(s => this.ancestors(s).forEach(x => seen.add(x)));
+    if (!seen.size){ this.print('sua branch ainda não tem commits', 'dim'); return {counted:false}; }
+    const list = [...seen].sort((x, y) => this.obj(y).data.seq - this.obj(x).data.seq);
+    for (const c of list){
+      const labels = [];
+      if (this.headCommit() === c) labels.push(this.head.type === 'ref' ? `HEAD -> ${this.head.name}` : 'HEAD');
+      for (const [b, h] of Object.entries(this.refs)) if (h === c && !(this.head.type === 'ref' && this.head.name === b)) labels.push(b);
+      const d = this.obj(c).data;
+      this.print(`${short(c)}${labels.length ? ' (' + labels.join(', ') + ')' : ''} ${d.msg}${d.parents.length > 1 ? '  [merge]' : ''}`, 'y');
+    }
+    return {counted:false};
+  }
+  cBranch(a){
+    if (!a.length){
+      const names = Object.keys(this.refs).sort();
+      if (!names.length) this.print('(nenhuma branch ainda: o primeiro commit cria a main)', 'dim');
+      names.forEach(n => this.print((this.head.type === 'ref' && this.head.name === n ? '* ' : '  ') + n + '  ' + short(this.refs[n]), this.head.type === 'ref' && this.head.name === n ? 'ok' : ''));
+      return {counted:false};
+    }
+    if (a[0] === '-d' || a[0] === '-D'){
+      const n = a[1]; if (!(n in this.refs)) throw new GitErr(`branch '${n}' não existe`);
+      if (this.head.type === 'ref' && this.head.name === n) throw new GitErr(`não dá para apagar a branch onde você está ('${n}')`);
+      const h = this.refs[n]; delete this.refs[n];
+      this.op('REF', `refs/heads/${n} apagado. O commit ${short(h)} continua em .git/objects`);
+      this.print(`Branch ${n} apagada (era ${short(h)}).`, 'ok');
+      return {counted:true};
+    }
+    const n = a[0];
+    if (!/^[A-Za-z0-9._\/-]+$/.test(n) || n === 'HEAD') throw new GitErr(`nome de branch inválido: ${n}`);
+    if (n in this.refs) throw new GitErr(`a branch '${n}' já existe`);
+    const at = a[1] ? this.resolve(a[1]) : this.headCommit();
+    if (!at) throw new GitErr('faça o primeiro commit antes de criar branches');
+    this.refs[n] = at;
+    this.op('REF', `refs/heads/${n} criado → ${short(at)} (um arquivo de 41 bytes!)`);
+    return {counted:true, speed:41};
+  }
+  goto(target, name, label){
+    if (this.merging) throw new GitErr('termine (ou aborte) o merge antes de trocar de branch');
+    this.carryTo(target);
+    const from = this.head.type === 'ref' ? this.head.name : short(this.head.hash);
+    if (name){ this.head = {type:'ref', name}; this.op('HEAD', `.git/HEAD agora contém "ref: refs/heads/${name}"`); }
+    else { this.head = {type:'detached', hash:target}; this.op('HEAD', `.git/HEAD agora contém o hash ${short(target)} (detached)`); }
+    this.reflog.unshift({h: target, msg: `${label}: moving from ${from} to ${name || short(target)}`});
+  }
+  cSwitch(a){
+    if (a[0] === '-c' || a[0] === '-b'){
+      const n = a[1]; if (!n) throw new GitErr('uso: git switch -c nome');
+      if (n in this.refs) throw new GitErr(`a branch '${n}' já existe`);
+      const at = a[2] ? this.resolve(a[2]) : this.headCommit();
+      if (!at){ this.head = {type:'ref', name:n}; this.op('HEAD', `HEAD → refs/heads/${n} (ainda sem commits)`); return {counted:true}; }
+      if (at !== this.headCommit()) this.carryTo(at);
+      this.refs[n] = at; this.op('REF', `refs/heads/${n} criado → ${short(at)} (41 bytes)`);
+      const from = this.head.type === 'ref' ? this.head.name : short(this.head.hash);
+      this.head = {type:'ref', name:n}; this.op('HEAD', `.git/HEAD agora contém "ref: refs/heads/${n}"`);
+      this.reflog.unshift({h: at, msg: `checkout: moving from ${from} to ${n}`});
+      this.print(`Mudou para a nova branch '${n}'`, 'ok');
+      return {counted:true, speed:41};
+    }
+    if (a[0] === '--detach'){ const t = this.resolve(a[1] || 'HEAD'); this.goto(t, null, 'checkout'); this.print(`HEAD agora está em ${short(t)} (detached)`, 'err'); return {counted:true}; }
+    const n = a[0]; if (!n) throw new GitErr('uso: git switch nome-da-branch');
+    if (!(n in this.refs)){
+      if (this.resolve(n, true)) throw new GitErr(`'${n}' não é uma branch. Para ir até um commit use git switch --detach ${n}`);
+      throw new GitErr(`branch '${n}' não existe. Para criar: git switch -c ${n}`);
+    }
+    if (this.head.type === 'ref' && this.head.name === n){ this.print(`Você já está em '${n}'`, 'dim'); return {counted:true}; }
+    this.goto(this.refs[n], n, 'checkout');
+    this.print(`Mudou para a branch '${n}'`, 'ok');
+    return {counted:true};
+  }
+  cCheckout(a){
+    if (a[0] === '-b') return this.cSwitch(['-c', ...a.slice(1)]);
+    const n = a[0]; if (!n) throw new GitErr('uso: git checkout <branch|commit>');
+    if (n in this.refs) return this.cSwitch([n]);
+    if (n in this.work || n in this.index) return this.cRestore([n]);
+    const t = this.resolve(n); this.goto(t, null, 'checkout');
+    this.print(`Você está em 'detached HEAD' em ${short(t)}. Commits aqui não pertencem a nenhuma branch!`, 'err');
+    return {counted:true};
+  }
+  cMerge(a){
+    if (a[0] === '--abort'){
+      if (!this.merging) throw new GitErr('não há merge em andamento');
+      this.hardTo(this.headCommit()); this.merging = null;
+      this.op('WORK', 'arquivos voltaram ao estado do HEAD'); this.print('Merge abortado. Tudo como antes.', 'ok');
+      return {counted:true};
+    }
+    if (this.merging) throw new GitErr('já existe um merge em andamento. Resolva ou use git merge --abort');
+    const name = a[0]; if (!name) throw new GitErr('uso: git merge <branch>');
+    const theirs = this.resolve(name), ours = this.headCommit();
+    if (!ours) throw new GitErr('faça um commit antes de mesclar');
+    if (this.isDirty()) throw new GitErr('há mudanças não commitadas. Commit ou stash antes do merge.');
+    const A = this.ancestors(ours);
+    if (A.has(theirs)){ this.print('Já está atualizado.', 'dim'); return {counted:true}; }
+    if (this.ancestors(theirs).has(ours)){
+      this.carryTo(theirs); this.moveHead(theirs, `merge ${name}: Fast-forward`);
+      this.print(`Fast-forward: ${short(ours)}..${short(theirs)}  (nenhum commit novo, só o ponteiro andou!)`, 'ok');
+      return {counted:true, speed:41};
+    }
+    const base = this.mergeBase(ours, theirs);
+    this.op('INFO', `ancestral comum: ${short(base)} (merge de 3 vias: base, ours, theirs)`);
+    const ot = this.treeOf(ours), tt = this.treeOf(theirs);
+    const {res, conflicts} = this.threeWay(this.treeOf(base), ot, tt);
+    if (!conflicts.length){
+      for (const n of Object.keys(res)) if (res[n] !== ot[n]) this.op('BLOB', `${short(res[n])} reaproveitado de '${name}' (${n})`);
+      const tree = this.writeTree(res);
+      const h = this.writeCommit(tree, [ours, theirs], `Merge branch '${name}'`);
+      this.moveHead(h, `merge ${name}: Merge made by the 'ort' strategy.`);
+      this.hardTo(h);
+      this.print(`Merge feito: commit ${short(h)} com DOIS parents.`, 'ok');
+      return {counted:true};
+    }
+    // conflict
+    const oursBlob = {};
+    for (const n of Object.keys(res)){ this.index[n] = res[n]; this.work[n] = this.content(res[n]); }
+    for (const n of conflicts){
+      const o = this.content(ot[n]) ?? '', t = this.content(tt[n]) ?? '';
+      const nl = s => s && !s.endsWith('\n') ? s + '\n' : s;
+      this.work[n] = `<<<<<<< HEAD\n${nl(o)}=======\n${nl(t)}>>>>>>> ${name}\n`;
+      oursBlob[n] = ot[n];
+      this.op('WORK', `${n}: marcadores de conflito escritos no arquivo`);
+    }
+    this.merging = {theirs, name, conflicts, oursBlob};
+    this.op('REF', `.git/MERGE_HEAD → ${short(theirs)}`);
+    conflicts.forEach(n => this.print(`CONFLITO (conteúdo): conflito de merge em ${n}`, 'err'));
+    this.print('Merge automático falhou. Corrija os conflitos e faça commit. (cat no arquivo para ver)', 'err');
+    return {counted:true};
+  }
+  cRebase(a){
+    if (this.head.type !== 'ref') throw new GitErr('rebase só numa branch (você está em detached HEAD)');
+    if (this.isDirty()) throw new GitErr('há mudanças não commitadas. Commit ou stash antes.');
+    const up = this.resolve(a[0] || ''), hc = this.headCommit();
+    const U = this.ancestors(up);
+    if (U.has(hc)){ this.carryTo(up); this.moveHead(up, `rebase: fast-forward`); this.print('Fast-forward.', 'ok'); return {counted:true}; }
+    if (this.ancestors(hc).has(up)){ this.print('Já está atualizado em relação a ' + a[0], 'dim'); return {counted:true}; }
+    const list = []; let c = hc;
+    while (c && !U.has(c)){ if (this.parents(c).length > 1) throw new GitErr('rebase de merge commits não é suportado aqui'); list.unshift(c); c = this.parents(c)[0]; }
+    let cur = up, curT = this.treeOf(up);
+    for (const x of list){
+      const {res, conflicts} = this.threeWay(this.treeOf(this.parents(x)[0]), curT, this.treeOf(x));
+      if (conflicts.length) throw new GitErr(`conflito ao reaplicar ${short(x)} em ${conflicts.join(', ')}. Neste jogo, use merge para esse caso.`);
+      const t = this.writeTree(res);
+      cur = this.writeCommit(t, [cur], this.obj(x).data.msg); curT = res;
+      this.op('INFO', `${short(x)} copiado como ${short(cur)} (hash NOVO porque o parent mudou)`);
+    }
+    this.moveHead(cur, `rebase (finish): refs/heads/${this.head.name} onto ${short(up)}`);
+    this.hardTo(cur);
+    this.print(`Rebase concluído: ${list.length} commit(s) recriado(s) sobre ${a[0]}. Os antigos viraram órfãos.`, 'ok');
+    return {counted:true};
+  }
+  cReset(a){
+    let mode = 'mixed'; const rest = [];
+    for (const x of a){ if (x === '--soft' || x === '--mixed' || x === '--hard') mode = x.slice(2); else rest.push(x); }
+    const spec = rest[0] || 'HEAD';
+    if (rest.length && !this.resolve(spec, true) && (spec in this.index || spec in this.work)) return this.cRestore(['--staged', spec]);
+    const t = this.resolve(spec);
+    if (!this.headCommit()) throw new GitErr('ainda não há commits');
+    if (this.merging && mode !== 'soft') this.merging = null;
+    this.moveHead(t, `reset: moving to ${spec}`);
+    if (mode !== 'soft'){ this.index = {...this.treeOf(t)}; this.op('INDEX', `.git/index igualado ao commit ${short(t)}`); }
+    if (mode === 'hard'){ this.hardTo(t); this.op('WORK', 'arquivos da pasta sobrescritos (mudanças descartadas!)'); }
+    this.print(`HEAD agora está em ${short(t)} ${this.obj(t).data.msg}  [--${mode}]`, mode === 'hard' ? 'err' : 'ok');
+    if (mode === 'soft') this.print('As mudanças desfeitas continuam no stage.', 'dim');
+    if (mode === 'mixed') this.print('As mudanças continuam na pasta, fora do stage.', 'dim');
+    return {counted:true};
+  }
+  cRestore(a){
+    const st = a[0] === '--staged'; const files = st ? a.slice(1) : a;
+    if (!files.length) throw new GitErr('uso: git restore arquivo  |  git restore --staged arquivo');
+    const ht = this.treeOf(this.headCommit());
+    for (const f of files){
+      if (st){ if (ht[f] === undefined) delete this.index[f]; else this.index[f] = ht[f]; this.op('INDEX', `.git/index: ${f} volta a ser igual ao HEAD`); }
+      else { if (!(f in this.index)) throw new GitErr(`'${f}' não está rastreado pelo Git`); this.work[f] = this.content(this.index[f]); this.op('WORK', `${f} restaurado a partir do stage (blob ${short(this.index[f])})`); }
+    }
+    return {counted:true};
+  }
+  cRevert(a){
+    const c = this.resolve(a[0] || ''); const p = this.parents(c);
+    if (p.length !== 1) throw new GitErr('revert de merge/raiz não é suportado aqui');
+    if (this.isDirty()) throw new GitErr('há mudanças não commitadas. Commit ou stash antes.');
+    const {res, conflicts} = this.threeWay(this.treeOf(c), this.treeOf(this.headCommit()), this.treeOf(p[0]));
+    if (conflicts.length) throw new GitErr('conflito ao reverter: ' + conflicts.join(', '));
+    const t = this.writeTree(res), msg = `Revert "${this.obj(c).data.msg}"`;
+    const h = this.writeCommit(t, [this.headCommit()], msg);
+    this.moveHead(h, 'revert: ' + msg); this.hardTo(h);
+    this.print(`[${this.branchLabel()} ${short(h)}] ${msg}  (a história antiga continua intacta)`, 'y');
+    return {counted:true};
+  }
+  cReflog(){
+    this.flags.reflog = true;
+    if (!this.reflog.length){ this.print('(reflog vazio)', 'dim'); return {counted:false}; }
+    this.reflog.slice(0, 15).forEach((e, i) => this.print(`${short(e.h)} HEAD@{${i}}: ${e.msg}`, 'y'));
+    return {counted:false};
+  }
+  cCatFile(a){
+    const flag = a[0], spec = a[1];
+    if (!['-p', '-t', '-s'].includes(flag) || !spec) throw new GitErr('uso: git cat-file -p|-t|-s <hash>');
+    let h = this.findObj(spec) || this.resolve(spec, true);
+    if (!h) throw new GitErr(`objeto '${spec}' não encontrado`);
+    const o = this.obj(h);
+    if (flag === '-t'){ this.print(o.type, {blob:'ok', tree:'info', commit:'y'}[o.type]); return {counted:false}; }
+    if (flag === '-s'){ this.print(String(blen(o.body))); return {counted:false}; }
+    o.body.replace(/\n$/, '').split('\n').forEach(l => this.print(l, o.type === 'tree' ? 'info' : o.type === 'commit' ? 'y' : 'ok'));
+    return {counted:false};
+  }
+  cHashObject(a){
+    const w = a.includes('-w'); const f = a.filter(x => x !== '-w')[0];
+    if (!(f in this.work)) throw new GitErr('uso: git hash-object [-w] arquivo');
+    const h = w ? this.writeBlob(this.work[f], f) : this.hashOf(this.work[f]);
+    this.print(h, 'y');
+    return {counted:w};
+  }
+  cStash(a){
+    if (a[0] === 'pop' || a[0] === 'apply'){
+      const s = this.stash[a[0] === 'pop' ? 'pop' : 'at'](-1); if (!s) throw new GitErr('nenhum stash salvo');
+      this.work = {...this.work, ...s.work}; this.index = {...this.index, ...s.index};
+      this.op('WORK', 'rascunho reaplicado na pasta e no stage');
+      this.print('Stash reaplicado.', 'ok'); return {counted:true};
+    }
+    if (a[0] === 'list'){ this.stash.forEach((s, i) => this.print(`stash@{${this.stash.length - 1 - i}}: WIP em ${s.label}`, 'y')); if (!this.stash.length) this.print('(vazio)', 'dim'); return {counted:false}; }
+    if (!this.isDirty()) throw new GitErr('nada para guardar');
+    const ht = this.treeOf(this.headCommit());
+    const files = new Set([...this.staged(), ...this.unstaged()]);
+    const w = {}, i = {};
+    files.forEach(f => { w[f] = this.work[f]; i[f] = this.index[f]; });
+    this.stash.push({work:w, index:i, label:this.branchLabel()});
+    this.writeBlob(Object.values(w).join(''), 'rascunho');
+    this.op('REF', 'refs/stash → commit especial com seu rascunho (simplificado)');
+    this.hardTo(this.headCommit());
+    this.print('Rascunho guardado. Pasta limpa. Use git stash pop para recuperar.', 'ok');
+    return {counted:true};
+  }
+  cDiff(a){
+    const staged = a.includes('--staged') || a.includes('--cached');
+    const ht = this.treeOf(this.headCommit());
+    const names = staged ? this.staged() : this.unstaged();
+    if (!names.length){ this.print('(sem diferenças)', 'dim'); return {counted:false}; }
+    for (const n of names){
+      const before = staged ? this.content(ht[n]) : this.content(this.index[n]);
+      const after = staged ? this.content(this.index[n]) : this.work[n];
+      this.print(`--- a/${n}  (blob ${short(staged ? ht[n] : this.index[n])})`, 'dim');
+      this.print(`+++ b/${n}`, 'dim');
+      const B = (before || '').replace(/\n$/, '').split('\n'), A = (after || '').replace(/\n$/, '').split('\n');
+      B.filter(l => l && !A.includes(l)).forEach(l => this.print('- ' + l, 'err'));
+      A.filter(l => l && !B.includes(l)).forEach(l => this.print('+ ' + l, 'ok'));
+    }
+    return {counted:false};
+  }
+}
+
+// ===== Levels =====
+const firstParent = (g, c) => c ? g.parents(c)[0] : undefined;
+const isMerge = (g, c) => !!c && g.parents(c).length === 2;
+const onBranch = (g, n) => g.head.type === 'ref' && g.head.name === n;
+
+const LEVELS = [
+  {
+    id: '1-1', name: 'PRIMEIRO SAVE', par: 2,
+    story: 'Você criou o README.md do seu jogo, mas o Git ainda não sabe que ele existe. Coloque o arquivo no stage e salve o primeiro commit.',
+    setup: ['echo "# Meu Jogo" > README.md'],
+    goals: [
+      {t: 'Colocar README.md no stage', ok: g => !!g.index['README.md']},
+      {t: 'Criar o primeiro commit', ok: g => !!g.refs.main},
+    ],
+    hint: ['git status', 'git add README.md', 'git commit -m "primeiro save"'],
+    learn: 'git add grava um BLOB em .git/objects e anota no index. git commit cria a TREE e o COMMIT, e cria o arquivo refs/heads/main.'
+  },
+  {
+    id: '1-2', name: 'STAGE SELETIVO', par: 2,
+    story: 'Você mexeu em dois arquivos: app.js (pronto) e notas.txt (rascunho bagunçado). Faça um commit SÓ com o app.js.',
+    setup: ['echo "console.log(\'menu\')" > app.js', 'echo "ideias soltas" > notas.txt', 'git add .', 'git commit -m "inicio"',
+            'echo "console.log(\'jogar\')" > app.js', 'echo "ideia: modo 2 players" >> notas.txt'],
+    goals: [
+      {t: 'Commit novo contém o app.js atualizado', ok: g => g.order.length === 2 && g.treeOf(g.headCommit())['app.js'] === g.hashOf(g.work['app.js'])},
+      {t: 'notas.txt continua modificado, fora do commit', ok: g => g.order.length === 2 && g.treeOf(g.headCommit())['notas.txt'] !== g.hashOf(g.work['notas.txt'])},
+    ],
+    hint: ['git status', 'git add app.js', 'git commit -m "botao jogar"'],
+    learn: 'O stage existe para você escolher o que entra no save. O blob de notas.txt nem foi criado: só app.js virou objeto.'
+  },
+  {
+    id: '2-1', name: 'MUNDO PARALELO', par: 4,
+    story: 'Quer testar um poder novo sem quebrar a main. Crie a branch feature, vá para ela e faça um commit lá.',
+    setup: ['echo "nivel 1" > mapa.txt', 'git add .', 'git commit -m "inicio"'],
+    ctx: g => ({main: g.refs.main}),
+    goals: [
+      {t: 'Estar na branch feature', ok: g => onBranch(g, 'feature')},
+      {t: 'feature tem 1 commit novo', ok: (g, c) => !!g.refs.feature && firstParent(g, g.refs.feature) === c.main},
+      {t: 'main continua onde estava', ok: (g, c) => g.refs.main === c.main},
+    ],
+    hint: ['git switch -c feature', 'echo "pulo duplo" > poder.txt', 'git add poder.txt', 'git commit -m "novo poder"'],
+    learn: 'Criar a branch escreveu 41 bytes. O commit novo moveu SÓ o ponteiro feature; main nem percebeu.'
+  },
+  {
+    id: '2-2', name: 'FAST-FORWARD', par: 2,
+    story: 'A feature tem 2 fases novas e a main ficou para trás. Traga tudo para a main sem criar commit novo.',
+    setup: ['echo "v1" > jogo.txt', 'git add .', 'git commit -m "inicio"', 'git switch -c feature',
+            'echo "fase 2" > fase2.txt', 'git add .', 'git commit -m "fase 2"', 'echo "fase 3" > fase3.txt', 'git add .', 'git commit -m "fase 3"'],
+    ctx: g => ({feat: g.refs.feature, n: g.order.length}),
+    goals: [
+      {t: 'Voltar para a main', ok: g => onBranch(g, 'main')},
+      {t: 'main alcança a feature', ok: (g, c) => g.refs.main === c.feat},
+      {t: 'Nenhum commit novo (só o ponteiro andou)', ok: (g, c) => g.refs.main === c.feat && g.order.length === c.n},
+    ],
+    hint: ['git switch main', 'git merge feature'],
+    learn: 'Fast-forward: a main era ancestral da feature, então o Git só arrastou o ponteiro. Custo: reescrever 41 bytes.'
+  },
+  {
+    id: '2-3', name: 'MERGE DE 3 VIAS', par: 1,
+    story: 'main ganhou um menu e feature ganhou um boss. As duas andaram. Junte as histórias na main.',
+    setup: ['echo "v1" > jogo.txt', 'git add .', 'git commit -m "inicio"', 'git branch feature',
+            'echo "menu novo" > menu.txt', 'git add .', 'git commit -m "menu"',
+            'git switch feature', 'echo "chefao" > boss.txt', 'git add .', 'git commit -m "boss"', 'git switch main'],
+    goals: [
+      {t: 'Criar um merge commit com 2 parents na main', ok: g => onBranch(g, 'main') && isMerge(g, g.refs.main)},
+      {t: 'menu.txt e boss.txt juntos na main', ok: g => { const t = g.treeOf(g.refs.main); return !!t['menu.txt'] && !!t['boss.txt']; }},
+    ],
+    hint: ['git log --all', 'git merge feature'],
+    learn: 'O Git achou o ancestral comum, comparou as 3 trees e criou um commit com DOIS parents. Os blobs foram todos reaproveitados.'
+  },
+  {
+    id: '3-1', name: 'DETACHED HEAD', par: 1,
+    story: 'Você viajou para um commit antigo e criou o "item secreto" ali, sem branch nenhuma. Se sair agora, ele vira órfão. Salve-o!',
+    setup: ['echo "a" > mapa.txt', 'git add .', 'git commit -m "fase 1"', 'echo "b" >> mapa.txt', 'git add .', 'git commit -m "fase 2"',
+            'echo "c" >> mapa.txt', 'git add .', 'git commit -m "fase 3"', 'git switch --detach HEAD~1',
+            'echo "espada lendaria" > item.txt', 'git add item.txt', 'git commit -m "item secreto"'],
+    ctx: g => ({secret: g.headCommit()}),
+    goals: [
+      {t: 'Uma branch aponta para o "item secreto"', ok: (g, c) => Object.values(g.refs).includes(c.secret)},
+      {t: 'HEAD de volta numa branch', ok: g => g.head.type === 'ref'},
+    ],
+    hint: ['cat .git/HEAD', 'git switch -c resgate'],
+    learn: '.git/HEAD tinha um hash cru. Agora tem "ref: refs/heads/resgate" e o commit ganhou um nome.'
+  },
+  {
+    id: '3-2', name: 'VOLTA NO TEMPO', par: 1,
+    story: 'Ops! Você commitou config.txt com uma senha. Desfaça o último commit, mas mantenha tudo no stage para arrumar.',
+    setup: ['echo "jogo" > jogo.txt', 'git add .', 'git commit -m "inicio"', 'echo "fase" > fase.txt', 'git add .', 'git commit -m "fase nova"',
+            'echo "senha=123" > config.txt', 'git add config.txt', 'git commit -m "config com senha"'],
+    ctx: g => ({prev: firstParent(g, g.headCommit()), cfg: g.index['config.txt']}),
+    goals: [
+      {t: 'main volta para "fase nova"', ok: (g, c) => g.refs.main === c.prev},
+      {t: 'config.txt continua no stage', ok: (g, c) => g.index['config.txt'] === c.cfg && g.refs.main === c.prev},
+    ],
+    hint: ['git log', 'git reset --soft HEAD~1'],
+    learn: '--soft só move o ponteiro. --mixed também limpa o stage. --hard apaga até os arquivos. O commit desfeito continua em .git/objects.'
+  },
+  {
+    id: '3-3', name: 'EXTRA LIFE', par: 1,
+    story: 'Alguém rodou git reset --hard e o commit "boss derrotado" sumiu do log. Ele ainda existe. Encontre-o e traga a main de volta.',
+    setup: ['echo "vida 1" > save.txt', 'git add .', 'git commit -m "fase 1"', 'echo "vida 2" >> save.txt', 'git add .', 'git commit -m "fase 2"',
+            'echo "chefao vencido" >> save.txt', 'git add .', 'git commit -m "boss derrotado"', 'git reset --hard HEAD~2'],
+    ctx: g => ({boss: g.order.find(h => g.obj(h).data.msg === 'boss derrotado')}),
+    goals: [
+      {t: 'Consultar o diário do HEAD (reflog)', ok: (g, c) => !!g.flags.reflog || g.refs.main === c.boss},
+      {t: 'main de volta em "boss derrotado"', ok: (g, c) => g.refs.main === c.boss},
+    ],
+    hint: ['git log', 'git reflog', 'git reset --hard HEAD@{1}'],
+    learn: 'O reflog anota cada movimento do HEAD. Commits "perdidos" continuam em .git/objects até o git gc limpar (semanas).'
+  },
+  {
+    id: 'BOSS', name: 'CONFLITO FINAL', par: 4,
+    story: 'main mudou vidas para 4. feature mudou para 5. Mesma linha, dois valores. Mescle a feature, decida (5 vidas!) e finalize.',
+    setup: ['echo "const vidas = 3;" > config.js', 'git add .', 'git commit -m "inicio"', 'git switch -c feature',
+            'echo "const vidas = 5;" > config.js', 'git add config.js', 'git commit -m "mais vidas"', 'git switch main',
+            'echo "const vidas = 4;" > config.js', 'git add config.js', 'git commit -m "balanceamento"'],
+    goals: [
+      {t: 'Começar o merge da feature', ok: g => !!g.merging || isMerge(g, g.refs.main)},
+      {t: 'config.js sem marcadores <<<<<<<', ok: g => (!!g.merging || isMerge(g, g.refs.main)) && !(g.work['config.js'] || '').includes('<<<<<<<')},
+      {t: 'Merge commit criado na main', ok: g => onBranch(g, 'main') && isMerge(g, g.refs.main) && !g.merging},
+    ],
+    hint: ['git merge feature', 'cat config.js', 'echo "const vidas = 5;" > config.js', 'git add config.js', 'git commit -m "resolve conflito"'],
+    learn: 'Conflito não é erro: é o Git se recusando a adivinhar. Você escolhe, git add marca como resolvido e o commit tem 2 parents.'
+  },
+];
+
+function buildLevel(i){
+  const L = LEVELS[i], g = new Git();
+  for (const c of L.setup){ const r = g.run(c); if (r.error) throw new Error('setup falhou: ' + c + ' :: ' + JSON.stringify(g.out)); }
+  g.resetStats(); g.flags = {};
+  const ctx = L.ctx ? L.ctx(g) : {};
+  return {g, ctx};
+}
+
+// ===== UI =====
+const $ = s => document.querySelector(s);
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k){ try { localStorage.removeItem(k); } catch {} }
+};
+const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const HINTS_TOTAL = 3;
+const RUN_KEY = 'gitarcade-run-v2';
+
+let cur = 0, G, CTX, cmdCount = 0, done = false, selected = null, hist = [], hpos = 0;
+let RUN = null;            // {name, startedAt, cleared:{id:{pts,st,cmds}}, hintsLeft, hintsUsed:{id:true}, finishedMs, submitted}
+let DB = null, rankRows = null, timerId = null;
+const INFO_FREE = ['help','clear','ls','cat'];
+const TAGCLS = {BLOB:'t-blob', TREE:'t-tree', COMMIT:'t-commit', REF:'t-ref', HEAD:'t-head', INDEX:'t-index', WORK:'t-work', INFO:'t-info'};
+
+// ---------- run state
+function saveRun(){ if (RUN) store.set(RUN_KEY, RUN); }
+function elapsed(){ if (!RUN) return 0; return RUN.finishedMs != null ? RUN.finishedMs : Date.now() - RUN.startedAt; }
+function fmtTime(ms){
+  const t = Math.max(0, Math.floor(ms / 100)), d = t % 10, s = Math.floor(t / 10) % 60, m = Math.floor(t / 600) % 60, h = Math.floor(t / 36000);
+  return (h ? h + ':' : '') + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0') + '.' + d;
+}
+function totalScore(){ return RUN ? Object.values(RUN.cleared).reduce((s, b) => s + b.pts, 0) : 0; }
+function unlocked(i){ return i === 0 || (RUN && !!RUN.cleared[LEVELS[i - 1].id]); }
+function allCleared(){ return RUN && LEVELS.every(L => RUN.cleared[L.id]); }
+function tick(){
+  $('#hudTime').textContent = fmtTime(elapsed());
+  $('#hudTime').parentElement.classList.toggle('stopped', !!(RUN && RUN.finishedMs != null));
+}
+function startTimer(){ clearInterval(timerId); tick(); timerId = setInterval(tick, 100); }
+
+// ---------- start screen
+function openStart(){
+  const saved = store.get(RUN_KEY, null);
+  const cont = $('#continueBox');
+  if (saved && saved.name && saved.finishedMs == null){
+    cont.hidden = false;
+    $('#continueInfo').textContent = `${saved.name} · ${Object.keys(saved.cleared || {}).length}/${LEVELS.length} fases · ${fmtTime(Date.now() - saved.startedAt)}`;
+  } else cont.hidden = true;
+  $('#newConfirm').hidden = true;
+  $('#start').hidden = false;
+  setTimeout(() => $('#pname').focus(), 50);
+}
+function beginRun(name){
+  RUN = {name, startedAt: Date.now(), cleared: {}, hintsLeft: HINTS_TOTAL, hintsUsed: {}, finishedMs: null, submitted: false};
+  saveRun(); $('#start').hidden = true; afterRunLoaded(0);
+}
+function continueRun(){
+  RUN = store.get(RUN_KEY, null); if (!RUN) return openStart();
+  $('#start').hidden = true;
+  const next = LEVELS.findIndex(L => !RUN.cleared[L.id]);
+  afterRunLoaded(next < 0 ? LEVELS.length - 1 : next);
+}
+function afterRunLoaded(i){
+  $('#hudName').textContent = RUN.name;
+  startTimer(); renderLevels(); loadLevel(i);
+  print(RUN.finishedMs != null ? `Jogo concluído, ${RUN.name}! Rejogue as fases à vontade ou abra o menu para ver o certificado.` : `Boa sorte, ${RUN.name}! O cronômetro já está correndo.`, 'ok');
+}
+
+// ---------- level flow
+function loadLevel(i){
+  if (!unlocked(i)) return;
+  cur = i; const L = LEVELS[i];
+  const b = buildLevel(i); G = b.g; CTX = b.ctx;
+  cmdCount = 0; done = false; selected = null;
+  $('#graph').classList.add('instant');
+  $('#out').textContent = '';
+  print(`=== WORLD ${L.id} · ${L.name} ===`, 'title');
+  print(L.story, 'story');
+  print('Digite help para ver os comandos. Consultas (status, log, reflog, cat...) são grátis.', 'dim');
+  renderMission(); renderAll();
+  requestAnimationFrame(() => requestAnimationFrame(() => $('#graph').classList.remove('instant')));
+  showTab('missao');
+  $('#cmd').focus({preventScroll:true});
+}
+function stars(n, par){ return n <= par ? 3 : n <= par + 2 ? 2 : 1; }
+function points(n, par){ return Math.max(200, 1000 - 150 * Math.max(0, n - par)); }
+
+function checkGoals(){
+  const L = LEVELS[cur];
+  const res = L.goals.map(x => { try { return !!x.ok(G, CTX); } catch { return false; } });
+  [...$('#mGoals').children].forEach((li, k) => li.classList.toggle('ok', res[k]));
+  if (!done && res.every(Boolean)){
+    done = true;
+    const st = stars(cmdCount, L.par), pts = points(cmdCount, L.par);
+    const prev = RUN.cleared[L.id];
+    if (!prev || prev.pts < pts) RUN.cleared[L.id] = {pts, st, cmds: cmdCount};
+    const finishedNow = RUN.finishedMs == null && allCleared();
+    if (finishedNow){ RUN.finishedMs = Date.now() - RUN.startedAt; tick(); }
+    saveRun(); renderLevels(); renderHud();
+    if (finishedNow) submitScore();
+    setTimeout(() => showWin(st, pts, finishedNow), reduceMotion ? 0 : 450);
+  }
+}
+function showWin(st, pts, finishedNow){
+  const L = LEVELS[cur], last = cur === LEVELS.length - 1;
+  const won = !!(RUN.finishedMs != null && last);
+  $('#winTitle').textContent = won ? 'YOU WIN!' : 'STAGE CLEAR!';
+  $('#winStars').textContent = '★'.repeat(st) + '☆'.repeat(3 - st);
+  $('#winPts').textContent = `+${pts} PTS · ${cmdCount} comando(s) · par ${L.par}`;
+  $('#winLearn').textContent = L.learn;
+  $('#winTime').textContent = won ? `TEMPO FINAL ${fmtTime(RUN.finishedMs)} · SCORE ${String(totalScore()).padStart(6, '0')} · CÓDIGO ${certCode(RUN.name, RUN.finishedMs)}` : `TEMPO ${fmtTime(elapsed())} · o relógio continua`;
+  $('#winTime').classList.toggle('final', won);
+  $('#winNext').textContent = won ? 'VER CERTIFICADO ★' : 'PRÓXIMA FASE ▶';
+  $('#winNext').dataset.action = won ? 'cert' : 'next';
+  $('#win').hidden = false; $('#winNext').focus();
+}
+
+// ---------- terminal
+function print(txt, cls){ const d = el('div', 'ln ' + (cls || ''), txt); $('#out').appendChild(d); return d; }
+function printOps(ops){
+  for (const o of ops){
+    const d = el('div', 'ln op');
+    d.appendChild(el('span', 'tag ' + (TAGCLS[o.t] || ''), o.t));
+    d.appendChild(el('span', '', ' ' + o.txt));
+    $('#out').appendChild(d);
+  }
+}
+function promptText(){
+  if (!G) return '$';
+  const where = G.head.type === 'ref' ? G.head.name : 'HEAD ' + short(G.head.hash);
+  return `${(RUN && RUN.name ? RUN.name.split(' ')[0].toLowerCase() : 'aluno')}@unisanta (${where}${G.merging ? '|MERGING' : ''}) $`;
+}
+const HELP = [
+  ['ARQUIVOS', 'ls · cat arq · echo "texto" > arq · echo "linha" >> arq · rm arq'],
+  ['BÁSICO', 'git status · git add arq|. · git commit -m "msg" · git log [--all] · git diff [--staged]'],
+  ['BRANCHES', 'git branch [nome] · git branch -d nome · git switch nome · git switch -c nome · git switch --detach <rev> · git checkout'],
+  ['JUNTAR', 'git merge nome · git merge --abort · git rebase nome'],
+  ['DESFAZER', 'git reset [--soft|--mixed|--hard] <rev> · git restore [--staged] arq · git revert <rev> · git stash [pop|list]'],
+  ['BAIXO NÍVEL', 'git reflog · git cat-file -p|-t <hash> · git hash-object [-w] arq · cat .git/HEAD · cat .git/refs/heads/main'],
+  ['REVISÕES', 'HEAD · HEAD~2 · HEAD^ · HEAD@{1} · nome-da-branch · hash curto (4+ caracteres)'],
+  ['OUTROS', 'help · clear'],
+];
+function exec(line){
+  line = line.trim(); if (!line || !G) return;
+  hist.push(line); hpos = hist.length;
+  print(promptText() + ' ' + line, 'cmdline');
+  if (line === 'clear'){ $('#out').textContent = ''; return; }
+  if (line === 'help'){ HELP.forEach(([k, v]) => { const d = el('div', 'ln help'); d.appendChild(el('b', '', k.padEnd(12, ' '))); d.appendChild(el('span', '', v)); $('#out').appendChild(d); }); scrollOut(); return; }
+  const prevRefs = JSON.stringify(G.refs), prevHead = JSON.stringify(G.head);
+  const t0 = performance.now();
+  const r = G.run(line);
+  const ms = performance.now() - t0;
+  G.out.forEach(([t, c]) => print(t, c));
+  if (G.ops.length) printOps(G.ops);
+  if (r.counted && !r.error && !INFO_FREE.includes(line.split(' ')[0]) && !done) cmdCount++;
+  const bytes = G.newBytes + (r.speed || 0);
+  if (G.ops.length){
+    const t = ms < 0.01 ? '<0.01' : ms.toFixed(2);
+    print(`⏱ ${t} ms · ${G.newCount} objeto(s) novo(s) · ${bytes} bytes gravados`, 'speed');
+    $('#hudSpeed').textContent = `${t}ms · ${bytes}B`;
+    const hs = $('#hudSpeed').parentElement; hs.classList.remove('pulse'); void hs.offsetWidth; hs.classList.add('pulse');
+  }
+  renderAll(prevRefs !== JSON.stringify(G.refs) || prevHead !== JSON.stringify(G.head));
+  checkGoals();
+  scrollOut();
+}
+function scrollOut(){ const o = $('#out'); o.scrollTop = o.scrollHeight; }
+
+// ---------- graph
+// Layout: commits left→right in creation order, one row ("lane") per line of history.
+// Labels stack above each commit (max 3 fit between rows); edges route through the gap below a row.
+const X0 = 70, DX = 120, Y0 = 160, DY = 172, LBL0 = 54, LBLSTEP = 30, HW = 38;
+const nodes = new Map();
+function pos(h){ const i = G.order.indexOf(h); return {x: X0 + i * DX, y: Y0 + G.lane[h] * DY}; }
+function upsert(key, cls, make){
+  let n = nodes.get(key), born = false;
+  if (!n){ n = make(); n.dataset.key = key; $('#graph').appendChild(n); nodes.set(key, n); born = true; }
+  n.className = cls + (born || n.classList.contains('born') ? ' born' : '');
+  if (born) setTimeout(() => n.classList.remove('born'), 700);
+  return n;
+}
+const clip = (s, n) => s.length > n ? s.slice(0, n - 1) + '…' : s;
+function renderGraph(flash){
+  const graph = $('#graph'), svg = $('#edges');
+  const reach = G.reachable(), hc = G.headCommit();
+  const lanes = Math.max(1, G.maxLane + 1);
+  const W = Math.max(X0 + G.order.length * DX + 40, 360), H = Math.max(240, Y0 + (lanes - 1) * DY + 80);
+  graph.style.width = W + 'px'; graph.style.height = H + 'px';
+  svg.setAttribute('width', W); svg.setAttribute('height', H); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  let paths = '<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#ffd23f"/></marker><marker id="ahm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#ff2bd6"/></marker><marker id="ahd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#6b6b8f"/></marker></defs>';
+  for (const h of G.order){
+    const c = pos(h), orphan = !reach.has(h);
+    G.parents(h).forEach((p, k) => {
+      const q = pos(p);
+      let d;
+      if (q.y === c.y) d = `M${c.x - HW} ${c.y} L${q.x + HW + 2} ${q.y}`;
+      else { const my = Math.min(c.y, q.y) + 90; d = `M${c.x - HW} ${c.y} L${c.x - 50} ${c.y} L${c.x - 50} ${my} L${q.x + 50} ${my} L${q.x + 50} ${q.y} L${q.x + HW + 2} ${q.y}`; }
+      paths += `<path d="${d}" class="edge${orphan ? ' orphan' : ''}${k ? ' second' : ''}" marker-end="url(#${orphan ? 'ahd' : k ? 'ahm' : 'ah'})"/>`;
+    });
+  }
+  svg.innerHTML = paths;
+  const seen = new Set();
+  for (const h of G.order){
+    const p = pos(h), d = G.obj(h).data;
+    const n = upsert('c:' + h, 'cnode' + (reach.has(h) ? '' : ' orphan') + (d.parents.length > 1 ? ' merge' : '') + (h === hc ? ' current' : '') + (h === hc && G.head.type !== 'ref' ? ' detached' : '') + (h === selected ? ' sel' : ''), () => {
+      const b = el('button', ''); b.type = 'button';
+      b.appendChild(el('span', 'hash')); b.appendChild(el('span', 'msg'));
+      b.addEventListener('click', () => { selected = b.dataset.key.slice(2); showTab('mundos'); renderAll(); });
+      return b;
+    });
+    n.querySelector('.hash').textContent = short(h);
+    n.querySelector('.msg').textContent = clip(d.msg, 13);
+    n.title = `${h}\n${d.msg}${reach.has(h) ? '' : '\n(órfão: nenhuma branch aponta para cá)'}`;
+    n.setAttribute('aria-label', `commit ${short(h)} ${d.msg}`);
+    n.style.transform = `translate(${p.x}px, ${p.y}px)`;
+    seen.add('c:' + h);
+  }
+  // labels: up to 2 branches + HEAD per commit; extra branches collapse into "+N"
+  const stacks = {};
+  const curB = G.head.type === 'ref' ? G.head.name : null;
+  const byCommit = {};
+  Object.keys(G.refs).forEach(b => (byCommit[G.refs[b]] = byCommit[G.refs[b]] || []).push(b));
+  for (const [h, names] of Object.entries(byCommit)){
+    names.sort((a, b) => (a === curB ? -1 : b === curB ? 1 : a === 'main' ? -1 : b === 'main' ? 1 : a.localeCompare(b)));
+    const shown = names.length > 2 ? names.slice(0, 1) : names;
+    stacks[h] = shown.map(b => ({key: 'b:' + b, txt: clip(b, 9), title: b, cls: 'lbl branch' + (b === curB ? ' active' : '')}));
+    if (names.length > 2) stacks[h].push({key: 'more:' + h, txt: `+${names.length - 1}`, title: names.slice(1).join(', '), cls: 'lbl branch more'});
+  }
+  if (hc) (stacks[hc] = stacks[hc] || []).push({key: 'HEAD', txt: 'HEAD', title: G.head.type === 'ref' ? 'HEAD → ' + curB : 'HEAD solto (detached)', cls: 'lbl head' + (G.head.type === 'ref' ? '' : ' detached')});
+  for (const [h, items] of Object.entries(stacks)){
+    const p = pos(h);
+    items.forEach((it, k) => {
+      const n = upsert(it.key, it.cls, () => { const d = el('div', ''); d.appendChild(el('span', 'in')); return d; });
+      n.querySelector('.in').textContent = it.txt; n.title = it.title;
+      n.style.transform = `translate(${p.x}px, ${p.y - LBL0 - k * LBLSTEP}px)`;
+      seen.add(it.key);
+    });
+  }
+  if (!hc){
+    const n = upsert('HEAD', 'lbl head unborn', () => { const d = el('div', ''); d.appendChild(el('span', 'in')); return d; });
+    n.querySelector('.in').textContent = `HEAD → ${curB} (vazia)`; n.title = 'Ainda não há commits';
+    n.style.transform = `translate(${X0 + 70}px, ${Y0 - LBL0}px)`; seen.add('HEAD');
+  }
+  for (const [k, n] of nodes) if (!seen.has(k)){ n.remove(); nodes.delete(k); }
+  if (flash){ for (const k of seen) if (!k.startsWith('c:')){ const n = nodes.get(k); n.classList.remove('flash'); void n.offsetWidth; n.classList.add('flash'); } }
+  const sc = $('#gscroll'); sc.scrollLeft = sc.scrollWidth;
+}
+
+// ---------- inspector
+function escapeHtml(s){ return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function renderInspector(){
+  const c = selected && G.objects.has(selected) ? selected : G.headCommit();
+  const box = $('#insp');
+  if (!c){ box.innerHTML = '<p class="muted">Ainda não há commits. Faça o primeiro e veja o commit apontar para a tree, e a tree para os blobs.</p>'; }
+  else {
+    const d = G.obj(c).data, tree = G.treeOf(c), names = Object.keys(tree).sort();
+    const rowH = 46, H = Math.max(150, names.length * rowH + 30), mid = H / 2;
+    let s = `<svg viewBox="0 0 420 ${H}" role="img" aria-label="commit ${short(c)} aponta para tree ${short(d.tree)} que aponta para ${names.length} blobs">`;
+    s += `<rect x="4" y="${mid - 40}" width="112" height="80" class="bx commit"/><text x="60" y="${mid - 14}" class="bt c">COMMIT</text><text x="60" y="${mid + 8}" class="bh">${short(c)}</text><text x="60" y="${mid + 28}" class="bs">${d.parents.length} parent(s)</text>`;
+    s += `<path d="M116 ${mid} L150 ${mid}" class="flow fc"/>`;
+    s += `<rect x="150" y="${mid - 40}" width="112" height="80" class="bx tree"/><text x="206" y="${mid - 14}" class="bt t">TREE</text><text x="206" y="${mid + 8}" class="bh">${short(d.tree)}</text><text x="206" y="${mid + 28}" class="bs">${names.length} entrada(s)</text>`;
+    names.forEach((n, i) => {
+      const y = 15 + i * rowH + rowH / 2;
+      s += `<path d="M262 ${mid} C285 ${mid} 278 ${y} 298 ${y}" class="flow ft" style="animation-delay:${i * 0.12}s"/>`;
+      s += `<rect x="298" y="${y - 19}" width="118" height="38" class="bx blob"/><text x="357" y="${y - 2}" class="bn">${escapeHtml(clip(n, 13))}</text><text x="357" y="${y + 14}" class="bh small">${short(tree[n])}</text>`;
+    });
+    s += '</svg>';
+    box.innerHTML = `<p class="cap">${c === G.headCommit() ? 'HEAD' : 'Selecionado'}: <b>${short(c)}</b> “${escapeHtml(d.msg)}”</p>` + s;
+  }
+  const ht = G.treeOf(G.headCommit());
+  const files = [...new Set([...Object.keys(G.work), ...Object.keys(G.index), ...Object.keys(ht)])].sort();
+  const tb = $('#worlds tbody'); tb.innerHTML = '';
+  if (!files.length) tb.innerHTML = '<tr><td colspan="4" class="muted">(sem arquivos)</td></tr>';
+  for (const f of files){
+    const w = G.hashOf(G.work[f]), i = G.index[f], h = ht[f];
+    const tr = el('tr');
+    tr.appendChild(el('td', 'fname', f));
+    tr.appendChild(el('td', w === undefined ? 'muted' : (w !== i ? 'diff' : ''), w === undefined ? '—' : short(w)));
+    tr.appendChild(el('td', i === undefined ? 'muted' : (i !== h ? 'staged' : ''), i === undefined ? '—' : short(i)));
+    tr.appendChild(el('td', h === undefined ? 'muted' : '', h === undefined ? '—' : short(h)));
+    tb.appendChild(tr);
+  }
+  const refs = $('#refs'); refs.innerHTML = '';
+  const add = (k, v, cls) => { const li = el('li'); li.appendChild(el('span', 'rk', k)); li.appendChild(el('span', cls, v)); refs.appendChild(li); };
+  add('.git/HEAD', G.head.type === 'ref' ? `ref: refs/heads/${G.head.name}` : G.head.hash, 'rv head');
+  Object.keys(G.refs).sort().forEach(b => add(`refs/heads/${b}`, G.refs[b], 'rv'));
+  if (G.merging) add('.git/MERGE_HEAD', G.merging.theirs, 'rv head');
+  const counts = {blob:0, tree:0, commit:0}; for (const o of G.objects.values()) counts[o.type]++;
+  $('#objCount').textContent = `.git/objects: ${counts.blob} blobs · ${counts.tree} trees · ${counts.commit} commits`;
+}
+
+// ---------- mission / hints / hud / levels
+function renderMission(){
+  const L = LEVELS[cur];
+  $('#mId').textContent = 'WORLD ' + L.id; $('#mName').textContent = L.name; $('#mStory').textContent = L.story;
+  $('#mPar').textContent = `PAR: ${L.par} comando(s) que alteram algo · consultas são grátis`;
+  const ul = $('#mGoals'); ul.innerHTML = '';
+  L.goals.forEach(g => ul.appendChild(el('li', '', g.t)));
+  const box = $('#hints'); box.innerHTML = '';
+  L.hint.forEach(h => { const b = el('button', 'chip', h); b.type = 'button'; b.addEventListener('click', () => { $('#cmd').value = h; $('#cmd').focus(); }); box.appendChild(b); });
+  box.hidden = !RUN.hintsUsed[L.id];
+  renderHintBtn(); checkGoals();
+}
+function renderHintBtn(){
+  const L = LEVELS[cur], used = !!RUN.hintsUsed[L.id], btn = $('#btnHint');
+  btn.disabled = !used && RUN.hintsLeft <= 0;
+  btn.textContent = used ? ($('#hints').hidden ? 'MOSTRAR DICA' : 'ESCONDER DICA') : RUN.hintsLeft > 0 ? `USAR DICA (${RUN.hintsLeft}/${HINTS_TOTAL})` : 'SEM DICAS';
+  $('#hudHints').textContent = '◆'.repeat(RUN.hintsLeft) + '◇'.repeat(HINTS_TOTAL - RUN.hintsLeft);
+}
+function useHint(){
+  const L = LEVELS[cur];
+  if (RUN.hintsUsed[L.id]){ $('#hints').hidden = !$('#hints').hidden; renderHintBtn(); return; }
+  const btn = $('#btnHint');
+  if (RUN.hintsLeft <= 0) return;
+  if (btn.dataset.confirm !== '1'){ btn.dataset.confirm = '1'; btn.textContent = `CONFIRMAR? SOBRAM ${RUN.hintsLeft - 1}`; setTimeout(() => { btn.dataset.confirm = ''; renderHintBtn(); }, 3000); return; }
+  btn.dataset.confirm = '';
+  RUN.hintsLeft--; RUN.hintsUsed[L.id] = true; saveRun();
+  $('#hints').hidden = false; renderHintBtn();
+}
+function renderHud(){
+  const L = LEVELS[cur];
+  $('#hudLevel').textContent = L.id;
+  $('#hudScore').textContent = String(totalScore()).padStart(6, '0');
+  $('#hudCmds').textContent = `${cmdCount}/${L.par}`;
+  $('#hudCmds').classList.toggle('over', cmdCount > L.par);
+  $('#prompt').textContent = promptText();
+}
+function renderLevels(){
+  const nav = $('#levels'); nav.innerHTML = '';
+  LEVELS.forEach((L, i) => {
+    const open = unlocked(i), c = RUN && RUN.cleared[L.id];
+    const b = el('button', 'lvl' + (i === cur ? ' on' : '') + (c ? ' clear' : '') + (L.id === 'BOSS' ? ' boss' : '') + (open ? '' : ' locked'));
+    b.type = 'button'; b.disabled = !open;
+    b.setAttribute('aria-label', `World ${L.id}: ${L.name}${open ? '' : ' (bloqueada)'}`);
+    b.appendChild(el('span', 'li', L.id));
+    b.appendChild(el('span', 'ls', !open ? 'LOCK' : c ? '★'.repeat(c.st) + '☆'.repeat(3 - c.st) : '☆☆☆'));
+    b.addEventListener('click', () => { $('#win').hidden = true; loadLevel(i); renderLevels(); });
+    nav.appendChild(b);
+  });
+}
+function renderAll(flash){ renderGraph(flash); renderInspector(); renderHud(); [...$('#levels').children].forEach((b, i) => b.classList.toggle('on', i === cur)); }
+function showTab(id){
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === id));
+  document.querySelectorAll('.tabpane').forEach(p => p.hidden = p.id !== 'pane-' + id);
+}
+
+// ---------- commands reference
+const CMDS = [
+  {c:'git init', t:'Cria um repositório', faz:'Transforma a pasta atual em um repositório Git.', baixo:'Cria a pasta .git/ com objects/ (vazia), refs/heads/ (vazia), config e o arquivo HEAD contendo "ref: refs/heads/main". A branch main ainda não existe de verdade: ela nasce no primeiro commit.', ex:'git init', cuidado:'Rodar dentro de um repo existente não apaga nada, só reinicializa.'},
+  {c:'git status', t:'Compara os 3 mundos', faz:'Mostra o que mudou e onde: na pasta, no stage, ou se está tudo limpo.', baixo:'Calcula o hash de cada arquivo da pasta e compara com o .git/index; depois compara o index com a tree do commit do HEAD. Não grava nada.', ex:'git status', cuidado:'É grátis: rode sempre que estiver em dúvida.'},
+  {c:'git add <arq>', t:'Prepara para o commit', faz:'Coloca a versão atual do arquivo no stage (próximo save).', baixo:'Lê o arquivo, calcula SHA-1("blob <tamanho>\\0<conteúdo>"), grava o BLOB comprimido em .git/objects/xx/yyyy e escreve no .git/index: nome → hash. Se o conteúdo já existia, reaproveita o blob.', ex:'git add README.md', cuidado:'git add . adiciona tudo, inclusive o que você não queria (senhas, .env). Use .gitignore.'},
+  {c:'git commit -m', t:'Salva um snapshot', faz:'Grava uma foto de tudo que está no stage, com mensagem e autor.', baixo:'Cria uma TREE a partir do index (nome → blob), cria o objeto COMMIT (tree, parent, autor, data, mensagem) e reescreve o arquivo da branch atual (refs/heads/main) com o hash novo.', ex:'git commit -m "feat: adiciona menu"', cuidado:'Mensagem boa diz o PORQUÊ. "ajustes" não ajuda ninguém daqui a 6 meses.'},
+  {c:'git log', t:'Mostra a história', faz:'Lista os commits a partir do HEAD.', baixo:'Lê o commit do HEAD e vai seguindo o campo parent de commit em commit. É uma lista ligada!', ex:'git log --oneline --graph --all', cuidado:'Commits órfãos (sem branch) não aparecem. Para eles, use reflog.'},
+  {c:'git diff', t:'Mostra diferenças', faz:'Mostra linha a linha o que mudou.', baixo:'Pega dois blobs e calcula o menor conjunto de linhas apagadas (−) e inseridas (+) com o algoritmo de Myers. Nada disso fica guardado: é calculado na hora.', ex:'git diff --staged', cuidado:'Sem flag compara pasta × stage, e não mostra o que já está no stage.'},
+  {c:'git branch <nome>', t:'Cria uma branch', faz:'Cria uma linha do tempo paralela a partir do commit atual.', baixo:'Escreve UM arquivo: .git/refs/heads/<nome> com 40 caracteres hex + quebra de linha = 41 bytes. Nada é copiado. Por isso é instantâneo.', ex:'git branch feature', cuidado:'Criar não muda de branch. Use switch (ou switch -c para criar e ir).'},
+  {c:'git switch <nome>', t:'Muda de branch', faz:'Vai para outra branch e atualiza os arquivos da pasta.', baixo:'Reescreve .git/HEAD para "ref: refs/heads/<nome>", troca o index e a pasta pelos conteúdos da tree daquele commit. Mudanças não commitadas viajam junto se não houver conflito.', ex:'git switch -c feature', cuidado:'Se você tiver mudanças que seriam sobrescritas, o Git recusa. Commit ou stash antes.'},
+  {c:'git checkout', t:'O canivete antigo', faz:'Faz o que switch e restore fazem, dependendo do argumento.', baixo:'Com branch: move o HEAD. Com hash: HEAD aponta direto para o commit (detached HEAD). Com arquivo: copia o blob do index para a pasta.', ex:'git checkout a1b2c3d', cuidado:'Por ser ambíguo, prefira switch/restore. Em detached HEAD, crie uma branch antes de sair.'},
+  {c:'git merge <branch>', t:'Junta históricos', faz:'Traz o trabalho de outra branch para a atual.', baixo:'Se a branch atual é ancestral da outra: FAST-FORWARD, só move o ponteiro. Senão: acha o ancestral comum (merge-base), compara 3 trees (base, ours, theirs) e cria um commit com DOIS parents.', ex:'git merge feature', cuidado:'Conflito = mesma linha mudada nos dois lados. Edite, git add, git commit. Ou git merge --abort.'},
+  {c:'git rebase <base>', t:'Reescreve por cima', faz:'Reaplica seus commits em cima de outra branch, deixando a história linear.', baixo:'Para cada commit seu, calcula a mudança e cria um commit NOVO com parent diferente. Parent novo = hash novo. Os antigos viram órfãos (ainda no reflog).', ex:'git rebase main', cuidado:'Nunca faça rebase de commits que outras pessoas já baixaram.'},
+  {c:'git reset <rev>', t:'Move a branch para trás', faz:'Volta a branch atual para outro commit.', baixo:'--soft: só move o ponteiro da branch. --mixed (padrão): move + reescreve o index. --hard: move + index + sobrescreve os arquivos da pasta.', ex:'git reset --soft HEAD~1', cuidado:'--hard descarta mudanças não commitadas para sempre. Commits ainda dá para salvar com reflog.'},
+  {c:'git restore <arq>', t:'Descarta mudanças', faz:'Volta um arquivo da pasta ao que está no stage, ou tira do stage com --staged.', baixo:'Copia o conteúdo do blob do index para a pasta. Com --staged: copia o hash da tree do HEAD para o index.', ex:'git restore --staged config.txt', cuidado:'Sem --staged, a edição local some.'},
+  {c:'git revert <rev>', t:'Desfaz em público', faz:'Cria um commit novo que faz o oposto de um commit antigo.', baixo:'Faz um merge de 3 vias ao contrário (base = commit alvo, theirs = o parent dele) e grava como commit novo. Nenhum hash existente muda.', ex:'git revert HEAD', cuidado:'É o jeito seguro de desfazer algo que já foi para o remoto.'},
+  {c:'git stash', t:'Guarda o rascunho', faz:'Tira suas mudanças da frente temporariamente e deixa a pasta limpa.', baixo:'Grava as mudanças como commits especiais e aponta refs/stash para eles. stash pop reaplica e remove da pilha.', ex:'git stash  →  git stash pop', cuidado:'Arquivos não rastreados ficam de fora (use -u no Git real).'},
+  {c:'git reflog', t:'O save state secreto', faz:'Lista todo lugar por onde o HEAD passou.', baixo:'Lê .git/logs/HEAD, um diário local de cada commit, switch, reset, merge. Permite voltar com HEAD@{n}.', ex:'git reset --hard HEAD@{1}', cuidado:'É só local e expira (90 dias por padrão; 30 para commits inalcançáveis).'},
+  {c:'git cat-file', t:'Raio-X de objetos', faz:'Mostra o tipo (-t) ou o conteúdo (-p) de qualquer objeto.', baixo:'Lê .git/objects/xx/yyyy, descomprime (zlib) e mostra. É a prova de que commit, tree e blob são só texto/bytes endereçados por hash.', ex:'git cat-file -p HEAD', cuidado:'Ferramenta de "encanamento": não altera nada.'},
+  {c:'git hash-object', t:'Calcula o hash', faz:'Mostra o SHA-1 que um arquivo teria como blob.', baixo:'SHA-1("blob " + tamanho + "\\0" + conteúdo). Com -w também grava em .git/objects.', ex:'git hash-object README.md', cuidado:'echo hello | git hash-object --stdin dá ce01362… em qualquer PC do mundo.'},
+  {c:'git gc', t:'Compacta o repositório (fora do jogo)', faz:'Junta objetos soltos num packfile e limpa o que não é mais alcançável.', baixo:'Dentro do pack, objetos parecidos viram uma base inteira + deltas (instruções de copiar e inserir bytes). O modelo continua sendo snapshot.', ex:'git count-objects -vH', cuidado:'Roda sozinho de vez em quando. Commits só no reflog sobrevivem até expirar.'},
+  {c:'git fetch / pull / push', t:'Multiplayer (fora do jogo)', faz:'fetch baixa, pull baixa e integra, push envia.', baixo:'fetch: copia objetos que faltam e move origin/main. pull: fetch + merge (ou rebase). push: envia objetos e pede ao servidor para mover a branch dele; recusa se não for fast-forward.', ex:'git push origin main', cuidado:'Push rejeitado? Alguém subiu antes. Faça pull, resolva, push.'},
+];
+function renderCmds(){
+  const box = $('#cmdlist');
+  CMDS.forEach(k => {
+    const d = el('details', 'cmd');
+    const s = el('summary'); s.appendChild(el('code', '', k.c)); s.appendChild(el('span', '', k.t)); d.appendChild(s);
+    const dl = el('dl');
+    [['O QUE FAZ', k.faz], ['NO BAIXO NÍVEL', k.baixo], ['EXEMPLO', k.ex], ['CUIDADO', k.cuidado]].forEach(([a, b]) => { dl.appendChild(el('dt', '', a)); dl.appendChild(el('dd', a === 'EXEMPLO' ? 'ex' : '', b)); });
+    d.appendChild(dl); box.appendChild(d);
+  });
+}
+
+// ---------- speed lab
+function race(){
+  const slow = $('#barSlow'), fast = $('#barFast');
+  slow.style.transition = 'none'; fast.style.transition = 'none'; slow.style.width = '0%'; fast.style.width = '0%';
+  $('#lblSlow').textContent = 'copiando 12.408 arquivos…'; $('#lblFast').textContent = '';
+  const g = new Git(); g.run('echo "x" > a.txt'); g.run('git add .'); g.run('git commit -m "a"');
+  const t0 = performance.now(); g.run('git branch v2'); const ms = performance.now() - t0;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    fast.style.transition = 'width .12s steps(3)'; fast.style.width = '100%';
+    slow.style.transition = reduceMotion ? 'none' : 'width 4s steps(40)'; slow.style.width = '100%';
+    $('#lblFast').textContent = `✓ ${ms.toFixed(3)} ms · escreveu 41 bytes`;
+    setTimeout(() => { $('#lblSlow').textContent = '✓ ~250 MB duplicados (ilustração)'; }, reduceMotion ? 0 : 4000);
+  }));
+}
+function bench(){
+  const N = 2000, data = []; for (let i = 0; i < N; i++) data.push('blob 1024\0' + ('linha ' + i + ' ').repeat(80).slice(0, 1024));
+  const t0 = performance.now(); let last = ''; for (const d of data) last = sha1(d); const ms = performance.now() - t0;
+  $('#benchOut').textContent = `${N} blobs de 1 KB → ${ms.toFixed(1)} ms (${Math.round(N / (ms / 1000)).toLocaleString('pt-BR')} hashes/s, em JavaScript puro). O Git real usa C: ainda mais rápido. Último: ${last.slice(0, 12)}…`;
+}
+
+// ---------- ranking
+// Shared and live on the claude.ai link (signed-in viewers, db capability); anywhere else
+// (GitHub Pages, signed-out) it falls back to a list kept on this device. The presenter can
+// add times from certificates by opening the page with #palestrante.
+const LOCAL_RANK = 'gitarcade-local-rank';
+let rankMode = 'loading';
+function cleanName(s){ return String(s || '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, 24); }
+function certCode(name, ms){ return sha1(cleanName(name).toLowerCase() + '|' + Math.floor(ms / 100) + '|arcade-unisanta').slice(0, 7); }
+function parseTime(s){
+  const m = String(s || '').trim().match(/^(?:(\d+):)?(\d{1,2}):(\d{2})(?:[.,](\d))?$/);
+  if (!m || +m[3] > 59) return null;
+  return (((+(m[1] || 0)) * 3600 + (+m[2]) * 60 + (+m[3])) * 10 + (+(m[4] || 0))) * 100;
+}
+function localRows(){
+  const rows = store.get(LOCAL_RANK, []);
+  return (Array.isArray(rows) ? rows : []).filter(r => r && typeof r.ms === 'number').sort((x, y) => x.ms - y.ms).slice(0, 10);
+}
+function renderRank(){
+  document.querySelectorAll('.rankbox').forEach(box => {
+    box.innerHTML = '';
+    if (rankMode === 'loading'){ box.appendChild(el('p', 'muted', 'Carregando ranking…')); return; }
+    box.appendChild(el('p', 'ranklabel', rankMode === 'shared' ? 'Ranking da sala · ao vivo' : 'Ranking deste computador'));
+    if (!rankRows || !rankRows.length){ box.appendChild(el('p', 'muted', 'Ninguém derrotou o boss ainda. Seja o primeiro!')); return; }
+    const ol = el('ol', 'rank');
+    rankRows.forEach((r, i) => {
+      const li = el('li', RUN && RUN.submitted && r.name === cleanName(RUN.name) && r.ms === RUN.finishedMs ? 'me' : '');
+      li.appendChild(el('span', 'rpos', String(i + 1).padStart(2, '0')));
+      li.appendChild(el('span', 'rname', cleanName(r.name) || '???'));
+      li.appendChild(el('span', 'rtime', fmtTime(Number(r.ms) || 0)));
+      ol.appendChild(li);
+    });
+    box.appendChild(ol);
+  });
+}
+function useLocal(){ DB = null; rankMode = 'local'; rankRows = localRows(); renderRank(); submitScore(); }
+async function initDb(tries){
+  tries = tries || 0;
+  if (!window.claude || typeof window.claude.use !== 'function'){
+    if (tries < 6) return setTimeout(() => initDb(tries + 1), 500);
+    return useLocal();
+  }
+  let db = null;
+  try { db = await window.claude.use('db'); } catch { db = null; }
+  if (!db) return useLocal();
+  try {
+    db.collection('ranking').orderBy('ms', 'asc').limit(10).onSnapshot(snap => {
+      DB = db; rankMode = 'shared';
+      rankRows = snap.docs.map(d => d.data() || {}).filter(r => typeof r.ms === 'number');
+      renderRank(); submitScore();
+    }, () => useLocal());
+  } catch { useLocal(); }
+}
+function addEntry(entry){
+  if (DB) return DB.collection('ranking').add(entry);
+  const rows = store.get(LOCAL_RANK, []); const list = Array.isArray(rows) ? rows : [];
+  list.push(entry); store.set(LOCAL_RANK, list);
+  rankRows = localRows(); renderRank();
+  return Promise.resolve();
+}
+function submitScore(){
+  if (rankMode === 'loading' || !RUN || RUN.submitted || RUN.finishedMs == null || !RUN.name) return;
+  RUN.submitted = true; saveRun();
+  addEntry({name: cleanName(RUN.name), ms: RUN.finishedMs, score: totalScore(), at: new Date().toISOString()})
+    .then(() => renderRank())
+    .catch(() => { RUN.submitted = false; saveRun(); });
+}
+function addManual(e){
+  e.preventDefault();
+  const msg = $('#adminMsg'), name = cleanName($('#aName').value), ms = parseTime($('#aTime').value), code = $('#aCode').value.trim().toLowerCase();
+  if (name.length < 2){ msg.textContent = 'Digite o nome exatamente como está no certificado.'; return; }
+  if (ms == null){ msg.textContent = 'Tempo no formato do certificado, por exemplo 12:34.5'; return; }
+  if (code !== certCode(name, ms)){ msg.textContent = 'O código não confere com esse nome e tempo. Confira letra por letra no certificado.'; return; }
+  if ((rankRows || []).some(r => cleanName(r.name).toLowerCase() === name.toLowerCase() && Math.floor(r.ms / 100) === Math.floor(ms / 100))){ msg.textContent = 'Esse resultado já está no ranking.'; return; }
+  addEntry({name, ms, score: null, at: new Date().toISOString(), manual: true})
+    .then(() => { msg.textContent = `${name} entrou no ranking com ${fmtTime(ms)}.`; $('#adminForm').reset(); $('#aName').focus(); })
+    .catch(() => { msg.textContent = 'Não consegui gravar agora. Tente de novo.'; });
+}
+function syncAdmin(){ $('#admin').hidden = location.hash !== '#palestrante'; if (!$('#admin').hidden) showTab('rank'); }
+
+// ---------- certificate
+function wrapText(ctx, text, maxW){
+  const words = text.split(' '), lines = []; let line = '';
+  for (const w of words){ const t = line ? line + ' ' + w : w; if (ctx.measureText(t).width > maxW && line){ lines.push(line); line = w; } else line = t; }
+  if (line) lines.push(line); return lines;
+}
+async function drawCert(){
+  try { await Promise.all([document.fonts.load('40px "Press Start 2P"'), document.fonts.load('40px "VT323"')]); } catch {}
+  const cv = $('#certCanvas'), ctx = cv.getContext('2d'), W = 1600, H = 1130;
+  cv.width = W; cv.height = H;
+  const PX = '"Press Start 2P", "Courier New", monospace', VT = '"VT323", "Courier New", monospace';
+  ctx.fillStyle = '#0b0b1a'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(255,255,255,0.025)'; for (let y = 0; y < H; y += 6) ctx.fillRect(0, y, W, 2);
+  // stepped pixel frame
+  ctx.fillStyle = '#ff2bd6'; [[24, 24, W - 48, 12], [24, H - 36, W - 48, 12], [24, 24, 12, H - 48], [W - 36, 24, 12, H - 48]].forEach(r => ctx.fillRect(...r));
+  ctx.fillStyle = '#00e5ff'; [[52, 52, W - 104, 6], [52, H - 58, W - 104, 6], [52, 52, 6, H - 104], [W - 58, 52, 6, H - 104]].forEach(r => ctx.fillRect(...r));
+  ctx.fillStyle = '#ffd23f'; [[16, 16], [W - 44, 16], [16, H - 44], [W - 44, H - 44]].forEach(([x, y]) => ctx.fillRect(x, y, 28, 28));
+  const logo = $('#logoSrc');
+  if (logo.complete && logo.naturalWidth){ const lw = 200, lh = lw * logo.naturalHeight / logo.naturalWidth; ctx.drawImage(logo, (W - lw) / 2, 70, lw, lh); }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#ffd23f'; ctx.font = `44px ${PX}`; ctx.fillText('CERTIFICADO', W / 2, 305);
+  ctx.fillStyle = '#ff2bd6'; ctx.font = `18px ${PX}`; ctx.fillText('DE PARTICIPAÇÃO · LEMBRANÇA', W / 2, 345);
+  ctx.fillStyle = '#e8e6d9'; ctx.font = `40px ${VT}`; ctx.fillText('Certificamos, como lembrança, que', W / 2, 410);
+  let fs = 48; ctx.font = `${fs}px ${PX}`;
+  const name = RUN.name.toUpperCase();
+  while (ctx.measureText(name).width > 1300 && fs > 20){ fs -= 2; ctx.font = `${fs}px ${PX}`; }
+  ctx.fillStyle = '#ff2bd6'; ctx.fillText(name, W / 2 + 5, 490 + 5);
+  ctx.fillStyle = '#39ff14'; ctx.fillText(name, W / 2, 490);
+  ctx.fillStyle = '#e8e6d9'; ctx.font = `38px ${VT}`;
+  const body = 'participou da Semana de Tecnologia da Unisanta, na palestra "Entendendo Git: um guia de versionamento", com carga horária de 2 horas, resolveu os 9 desafios do Git Arcade e derrotou o BOSS do conflito de merge.';
+  const bl = wrapText(ctx, body, 1180); bl.forEach((l, i) => ctx.fillText(l, W / 2, 560 + i * 44));
+  const statY = Math.max(760, 560 + (bl.length - 1) * 44 + 40);
+  // stat boxes
+  const stats = [['TEMPO', fmtTime(RUN.finishedMs)], ['SCORE', String(totalScore()).padStart(6, '0')], ['DATA', new Date().toLocaleDateString('pt-BR')]];
+  stats.forEach(([k, v], i) => {
+    const bw = 340, gap = 40, x = (W - (bw * 3 + gap * 2)) / 2 + i * (bw + gap), y = statY;
+    ctx.fillStyle = '#12122b'; ctx.fillRect(x, y, bw, 110);
+    ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 4; ctx.strokeRect(x + 2, y + 2, bw - 4, 106);
+    ctx.fillStyle = '#9a9ab8'; ctx.font = `14px ${PX}`; ctx.fillText(k, x + bw / 2, y + 36);
+    ctx.fillStyle = '#ffd23f'; ctx.font = `26px ${PX}`; ctx.fillText(v, x + bw / 2, y + 82);
+  });
+  // signature + id
+  const sy = Math.max(950, statY + 150);
+  ctx.fillStyle = '#e8e6d9'; ctx.fillRect(1050, sy, 380, 3);
+  ctx.font = `36px ${VT}`; ctx.fillText('Guilherme Gongora', 1240, sy + 40);
+  ctx.fillStyle = '#9a9ab8'; ctx.font = `28px ${VT}`; ctx.fillText('palestrante', 1240, sy + 70);
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#39ff14'; ctx.font = `30px ${VT}`; ctx.fillText('commit ' + certCode(RUN.name, RUN.finishedMs), 140, sy + 10);
+  ctx.fillStyle = '#9a9ab8'; ctx.font = `26px ${VT}`;
+  wrapText(ctx, 'Lembrança simbólica, sem valor de certificação oficial.', 820).forEach((l, i) => ctx.fillText(l, 140, sy + 46 + i * 30));
+  const url = cv.toDataURL('image/png');
+  $('#certImg').src = url;
+}
+async function openCert(){
+  $('#win').hidden = true; $('#cert').hidden = false; $('#certMsg').textContent = '';
+  await drawCert();
+  renderRank();
+  let dl = null; try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch { dl = null; }
+  $('#btnDownload').hidden = !dl;
+  $('#certTip').textContent = dl ? 'Ou clique com o botão direito na imagem e escolha "Salvar imagem como".' : 'Clique com o botão direito na imagem e escolha "Salvar imagem como" (no celular, toque e segure).';
+  $('#btnDownload').onclick = () => {
+    $('#certCanvas').toBlob(blob => {
+      if (!blob) return;
+      const slug = RUN.name.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'player';
+      dl.save({filename: `certificado-git-arcade-${slug}.png`, data: blob})
+        .then(() => { $('#certMsg').textContent = 'Certificado salvo.'; })
+        .catch(e => { $('#certMsg').textContent = e && e.code === 'declined' ? 'Download cancelado.' : 'Não deu para baixar aqui. Use o botão direito na imagem.'; });
+    }, 'image/png');
+  };
+  $('#btnCloseCert').focus();
+}
+
+// ---------- boot
+function boot(){
+  $('#form').addEventListener('submit', e => { e.preventDefault(); const v = $('#cmd').value; $('#cmd').value = ''; exec(v); });
+  $('#cmd').addEventListener('keydown', e => {
+    if (e.key === 'ArrowUp'){ if (hpos > 0){ hpos--; $('#cmd').value = hist[hpos]; } e.preventDefault(); }
+    if (e.key === 'ArrowDown'){ if (hpos < hist.length - 1){ hpos++; $('#cmd').value = hist[hpos]; } else { hpos = hist.length; $('#cmd').value = ''; } e.preventDefault(); }
+  });
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab)));
+  $('#btnHint').addEventListener('click', useHint);
+  $('#btnReset').addEventListener('click', () => loadLevel(cur));
+  $('#winNext').addEventListener('click', () => {
+    if ($('#winNext').dataset.action === 'cert') return openCert();
+    $('#win').hidden = true; const n = Math.min(cur + 1, LEVELS.length - 1); loadLevel(n); renderLevels();
+  });
+  $('#winStay').addEventListener('click', () => { $('#win').hidden = true; $('#cmd').focus(); });
+  $('#btnRace').addEventListener('click', race);
+  $('#btnBench').addEventListener('click', bench);
+  $('#btnCloseCert').addEventListener('click', () => { $('#cert').hidden = true; });
+  $('#btnNewRun').addEventListener('click', () => { $('#cert').hidden = true; store.del(RUN_KEY); openStart(); });
+  $('#btnMenu').addEventListener('click', () => { if (RUN && RUN.finishedMs != null) openCert(); else openStart(); });
+  $('#out').addEventListener('click', () => { if (!window.getSelection().toString()) $('#cmd').focus({preventScroll:true}); });
+  $('#startForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = cleanName($('#pname').value);
+    if (name.length < 2){ $('#nameErr').textContent = 'Digite seu nome (é ele que vai no certificado).'; $('#pname').focus(); return; }
+    const saved = store.get(RUN_KEY, null);
+    if (saved && saved.finishedMs == null && $('#newConfirm').hidden){ $('#newConfirm').hidden = false; return; }
+    beginRun(name);
+  });
+  $('#btnContinue').addEventListener('click', continueRun);
+  renderCmds(); showTab('missao');
+  const saved = store.get(RUN_KEY, null);
+  if (saved && saved.name && saved.finishedMs != null){ RUN = saved; afterRunLoaded(LEVELS.length - 1); }
+  else { RUN = {name: '', startedAt: Date.now(), cleared: {}, hintsLeft: HINTS_TOTAL, hintsUsed: {}, finishedMs: 0, submitted: true}; renderLevels(); loadLevel(0); RUN = null; openStart(); }
+  if (saved && saved.name) $('#pname').value = saved.name;
+  $('#adminForm').addEventListener('submit', addManual);
+  window.addEventListener('hashchange', syncAdmin); syncAdmin();
+  initDb();
+}
+boot();
+
+</script>
