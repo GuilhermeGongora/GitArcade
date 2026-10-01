@@ -37,6 +37,7 @@ button:disabled{cursor:not-allowed}
 .stat.pulse b{animation:pulse .6s steps(3)}
 @keyframes pulse{0%{color:#fff;text-shadow:0 0 8px var(--tree)}100%{}}
 .btn.small{font-size:8px;padding:8px 10px 7px}
+.btn.test{border-color:var(--head);color:var(--head)}
 
 /* level select */
 .levels{display:flex;flex-wrap:wrap;gap:8px}
@@ -258,6 +259,7 @@ details.cmd dd.ex{color:var(--commit)}
     <div class="stat"><small>DICAS</small><b id="hudHints">◆◆◆</b></div>
     <div class="stat speed"><small>ÚLTIMO COMANDO</small><b id="hudSpeed">—</b></div>
     <button class="btn small" id="btnMenu" type="button">MENU</button>
+    <button class="btn small test" id="btnTest" type="button" title="Provisório: resolve todas as fases, emite o certificado e envia ao ranking">TESTE: RESOLVER TUDO</button>
   </header>
 
   <nav class="levels" id="levels" aria-label="Fases"></nav>
@@ -430,6 +432,33 @@ details.cmd dd.ex{color:var(--commit)}
     </section>
   </div>
 </div>
+
+<script type="module">
+// Shared ranking for the GitHub Pages version (Firebase Firestore). On claude.ai the import is blocked and the game falls back.
+const firebaseConfig = {
+  apiKey: "AIzaSyC5xZzAyNHjYoTpwUKADbu0GM9kZSfDHkA",
+  authDomain: "gitarcade-f22cb.firebaseapp.com",
+  projectId: "gitarcade-f22cb",
+  storageBucket: "gitarcade-f22cb.firebasestorage.app",
+  messagingSenderId: "154626906750",
+  appId: "1:154626906750:web:d53fb8b72d61d8a1f6162f"
+};
+try {
+  const [{ initializeApp }, fs] = await Promise.all([
+    import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
+    import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+  ]);
+  const db = fs.getFirestore(initializeApp(firebaseConfig));
+  const col = fs.collection(db, 'ranking');
+  window.FBRANK = {
+    add: e => fs.addDoc(col, e),
+    subscribe: (cb, err) => fs.onSnapshot(fs.query(col, fs.orderBy('ms', 'asc'), fs.limit(10)), s => cb(s.docs.map(d => d.data())), err)
+  };
+  window.dispatchEvent(new Event('fbrank-ready'));
+} catch (e) {
+  window.FBRANK_FAILED = true;
+}
+</script>
 
 <script>
 // ===== SHA-1 (real) =====
@@ -1528,25 +1557,34 @@ function renderRank(){
   });
 }
 function useLocal(){ DB = null; rankMode = 'local'; rankRows = localRows(); renderRank(); submitScore(); }
-async function initDb(tries){
-  tries = tries || 0;
-  if (!window.claude || typeof window.claude.use !== 'function'){
-    if (tries < 6) return setTimeout(() => initDb(tries + 1), 500);
-    return useLocal();
-  }
-  let db = null;
-  try { db = await window.claude.use('db'); } catch { db = null; }
-  if (!db) return useLocal();
+// Backend order: Firebase (GitHub Pages, everyone) → claude.ai db (signed-in org viewers) → this device.
+function useShared(backend){
+  let first = true;
   try {
-    db.collection('ranking').orderBy('ms', 'asc').limit(10).onSnapshot(snap => {
-      DB = db; rankMode = 'shared';
-      rankRows = snap.docs.map(d => d.data() || {}).filter(r => typeof r.ms === 'number');
-      renderRank(); submitScore();
+    backend.subscribe(rows => {
+      DB = backend; rankMode = 'shared';
+      rankRows = rows.filter(r => r && typeof r.ms === 'number');
+      renderRank(); if (first){ first = false; submitScore(); }
     }, () => useLocal());
   } catch { useLocal(); }
 }
+async function initDb(tries){
+  tries = tries || 0;
+  if (window.FBRANK) return useShared(window.FBRANK);
+  if (window.claude && typeof window.claude.use === 'function'){
+    let db = null;
+    try { db = await window.claude.use('db'); } catch { db = null; }
+    if (db) return useShared({
+      add: e => db.collection('ranking').add(e),
+      subscribe: (cb, err) => db.collection('ranking').orderBy('ms', 'asc').limit(10).onSnapshot(s => cb(s.docs.map(d => d.data() || {})), err)
+    });
+  }
+  if (!window.FBRANK_FAILED && tries < 24) return setTimeout(() => initDb(tries + 1), 250);
+  if (tries < 8) return setTimeout(() => initDb(tries + 1), 250);
+  useLocal();
+}
 function addEntry(entry){
-  if (DB) return DB.collection('ranking').add(entry);
+  if (DB) return DB.add(entry);
   const rows = store.get(LOCAL_RANK, []); const list = Array.isArray(rows) ? rows : [];
   list.push(entry); store.set(LOCAL_RANK, list);
   rankRows = localRows(); renderRank();
@@ -1644,6 +1682,15 @@ async function openCert(){
   $('#btnCloseCert').focus();
 }
 
+
+// ---------- PROVISÓRIO: atalho de teste (remover antes da palestra)
+function solveAllForTest(){
+  if (!RUN || !RUN.name){ openStart(); $('#nameErr').textContent = 'Digite um nome e aperte PRESS START antes de usar o teste.'; return; }
+  LEVELS.forEach(L => { if (!RUN.cleared[L.id]) RUN.cleared[L.id] = {pts: 1000, st: 3, cmds: L.par}; });
+  if (RUN.finishedMs == null) RUN.finishedMs = Date.now() - RUN.startedAt;
+  saveRun(); tick(); renderLevels(); renderHud(); submitScore(); openCert();
+}
+
 // ---------- boot
 function boot(){
   $('#form').addEventListener('submit', e => { e.preventDefault(); const v = $('#cmd').value; $('#cmd').value = ''; exec(v); });
@@ -1680,7 +1727,9 @@ function boot(){
   else { RUN = {name: '', startedAt: Date.now(), cleared: {}, hintsLeft: HINTS_TOTAL, hintsUsed: {}, finishedMs: 0, submitted: true}; renderLevels(); loadLevel(0); RUN = null; openStart(); }
   if (saved && saved.name) $('#pname').value = saved.name;
   $('#adminForm').addEventListener('submit', addManual);
+  $('#btnTest').addEventListener('click', solveAllForTest);
   window.addEventListener('hashchange', syncAdmin); syncAdmin();
+  window.addEventListener('fbrank-ready', () => { if (rankMode !== 'shared' || DB !== window.FBRANK) useShared(window.FBRANK); });
   initDb();
 }
 boot();
