@@ -1724,11 +1724,15 @@ function teleFlush(now){
     name: cleanName(RUN.name), startedAt: RUN.startedAt, lastSeen: Date.now(), level: LEVELS[cur] ? LEVELS[cur].id : '1-1',
     cleared: Object.keys(RUN.cleared).length, finishedMs: RUN.finishedMs == null ? null : RUN.finishedMs, score: totalScore(),
     hintsUsed: HINTS_TOTAL - RUN.hintsLeft, cmdTotal: T.total, errTotal: T.errTotal, cmds: T.cmds, errs: T.errs,
-    device: window.matchMedia && window.matchMedia('(pointer: coarse)').matches ? 'mobile' : 'desktop', test: !!RUN.test
+    device: window.matchMedia && window.matchMedia('(pointer: coarse)').matches ? 'mobile' : 'desktop', test: !!RUN.test,
+    left: document.visibilityState === 'hidden'
   };
   try { window.FBRANK.savePlayer(RUN.id, data).catch(() => {}); } catch {}
 }
-setInterval(() => { if (RUN && RUN.finishedMs == null && document.visibilityState === 'visible') teleFlush(true); }, 60000);
+// presence: heartbeat while the tab is visible; mark 'left' when it is hidden or closed
+setInterval(() => { if (RUN && RUN.finishedMs == null && document.visibilityState === 'visible') teleFlush(true); }, 45000);
+document.addEventListener('visibilitychange', () => teleFlush(true));
+window.addEventListener('pagehide', () => teleFlush(true));
 window.addEventListener('fbrank-ready', () => teleFlush(true));
 
 // ---------- boot

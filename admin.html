@@ -62,6 +62,15 @@ label.tg input{width:18px;height:18px;accent-color:var(--ok)}
 .chip.idle{color:var(--mut);border-color:var(--mut)}
 .chip.win{color:#14100a;background:var(--accent);border-color:var(--accent)}
 .chip.test{color:var(--err);border-color:var(--err)}
+.chip.left{color:#ff3b3b;border-color:#ff3b3b}
+.x{font-family:var(--px);font-size:8px;padding:4px 6px 3px;background:none;color:var(--mut);border:2px solid var(--line);cursor:pointer}
+.x:hover{color:#ff3b3b;border-color:#ff3b3b}
+.x.confirm{color:#14100a;background:#ff3b3b;border-color:#ff3b3b}
+.gate{max-width:520px;margin:12vh auto 0;text-align:center;align-items:center}
+.gate h1{font-family:var(--px);font-size:16px;font-weight:400;color:#39ff14;text-shadow:3px 3px 0 #ff2bd6;line-height:1.6}
+.gate img{height:80px}
+.who{color:var(--mut);font-size:18px}
+#msg{color:var(--accent);min-height:1.2em}
 
 .chart{position:relative;min-height:120px}
 .chart svg{display:block;width:100%;height:auto;overflow:visible}
@@ -85,18 +94,28 @@ td.num,th.num{text-align:right}
 </style>
 </head>
 <body>
-<div class="wrap">
+<section class="card gate" id="gate">
+  <img src="unisanta.png" alt="Unisanta" onerror="this.hidden=true">
+  <h1>PAINEL DO PALESTRANTE</h1>
+  <p class="muted" id="gateMsg">Acesso restrito. Entre com a conta Google do palestrante.</p>
+  <button class="btn" id="btnLogin" type="button">ENTRAR COM GOOGLE</button>
+</section>
+<div class="wrap" id="app" hidden>
   <header class="card top">
     <img src="unisanta.png" alt="Unisanta" onerror="this.hidden=true">
     <h1>PAINEL DO PALESTRANTE</h1>
     <div class="live" id="live"><span class="dot"></span><span id="liveTxt">CONECTANDO…</span></div>
     <label class="tg"><input type="checkbox" id="hideTests" checked> ocultar testes</label>
+    <label class="tg"><input type="checkbox" id="hideGhosts" checked> ocultar quem saiu sem jogar</label>
+    <button class="btn" id="btnDelTests" type="button">APAGAR TESTES</button>
     <button class="btn" id="btnCsv" type="button">EXPORTAR CSV</button>
+    <span class="who" id="who"></span><button class="btn" id="btnLogout" type="button">SAIR</button>
+    <p id="msg" style="width:100%"></p>
   </header>
 
   <section class="kpis" aria-label="Resumo">
     <div class="kpi"><small>ENTRARAM</small><b id="kIn">0</b><span id="kInSub">—</span></div>
-    <div class="kpi"><small>JOGANDO AGORA</small><b id="kNow">0</b><span>ativos nos últimos 3 min</span></div>
+    <div class="kpi"><small>JOGANDO AGORA</small><b id="kNow">0</b><span>com o jogo aberto agora</span></div>
     <div class="kpi"><small>ZERARAM</small><b id="kWin">0</b><span id="kWinSub">—</span></div>
     <div class="kpi"><small>MELHOR TEMPO</small><b id="kBest">—</b><span id="kBestSub">—</span></div>
     <div class="kpi"><small>TEMPO MÉDIO</small><b id="kAvg">—</b><span>de quem zerou</span></div>
@@ -135,9 +154,9 @@ td.num,th.num{text-align:right}
   <section class="card">
     <h2>TODOS OS JOGADORES</h2>
     <div class="tablewrap"><table id="tbl"><thead><tr>
-      <th>NOME</th><th>ENTROU</th><th>STATUS</th><th>FASE</th><th class="num">RESOLVIDAS</th><th class="num">COMANDOS</th><th class="num">ERROS</th><th class="num">DICAS</th><th class="num">TEMPO</th><th class="num">SCORE</th><th>APARELHO</th>
+      <th>NOME</th><th>ENTROU</th><th>STATUS</th><th>FASE</th><th class="num">RESOLVIDAS</th><th class="num">COMANDOS</th><th class="num">ERROS</th><th class="num">DICAS</th><th class="num">TEMPO</th><th class="num">SCORE</th><th>APARELHO</th><th></th>
     </tr></thead><tbody></tbody></table></div>
-    <p class="muted">Os dados são atualizados a cada fase concluída, a cada dica e a cada poucos comandos. "Jogando agora" considera atividade nos últimos 3 minutos.</p>
+    <p class="muted">Os dados são atualizados a cada fase concluída, a cada dica e a cada poucos comandos. "Jogando agora" é quem está com o jogo aberto na tela. Quem fecha ou troca de aba aparece como SAIU (ou some, se nem chegou a jogar).</p>
   </section>
 </div>
 <div class="tip" id="tip" hidden></div>
@@ -151,6 +170,7 @@ const firebaseConfig = {
   messagingSenderId: "154626906750",
   appId: "1:154626906750:web:d53fb8b72d61d8a1f6162f"
 };
+const ADMIN_EMAIL = 'guilhermegongora2007@gmail.com';
 const LEVELS = ['1-1','1-2','2-1','2-2','2-3','3-1','3-2','3-3','BOSS'];
 const $ = s => document.querySelector(s);
 const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
@@ -164,10 +184,23 @@ let players = [], ranking = [], seen = new Set(), firstLoad = true;
 
 function status(p){
   if (p.finishedMs != null) return {k: 'win', t: 'ZEROU'};
-  if (Date.now() - n(p.lastSeen) < 180000) return {k: 'play', t: 'JOGANDO'};
-  return {k: 'idle', t: 'PARADO'};
+  if (!p.left && Date.now() - n(p.lastSeen) < 120000) return {k: 'play', t: 'JOGANDO'};
+  return {k: 'left', t: 'SAIU'};
 }
-function visible(){ return $('#hideTests').checked ? players.filter(p => !p.test) : players; }
+const ghost = p => status(p).k === 'left' && !n(p.cleared) && !n(p.cmdTotal);
+function visible(){
+  let l = players;
+  if ($('#hideTests').checked) l = l.filter(p => !p.test);
+  if ($('#hideGhosts').checked) l = l.filter(p => !ghost(p));
+  return l;
+}
+let DEL = null;
+function confirmBtn(btn, label, action){
+  if (btn.dataset.armed === '1'){ btn.dataset.armed = ''; btn.classList.remove('confirm'); btn.textContent = label; action(); return; }
+  btn.dataset.armed = '1'; btn.classList.add('confirm'); btn.textContent = 'CONFIRMAR?';
+  setTimeout(() => { btn.dataset.armed = ''; btn.classList.remove('confirm'); btn.textContent = label; }, 3000);
+}
+const say = t => { $('#msg').textContent = t; };
 
 // ---------- tooltip
 const tip = $('#tip');
@@ -251,7 +284,7 @@ function render(){
   if (!list.length) feed.appendChild(el('li', 'muted', 'Assim que alguém apertar PRESS START, aparece aqui.'));
   [...list].sort((a, b) => n(b.startedAt) - n(a.startedAt)).slice(0, 60).forEach(p => {
     const st = status(p), li = el('li', seen.has(p.id) || firstLoad ? '' : 'new');
-    li.style.borderLeftColor = st.k === 'win' ? 'var(--accent)' : st.k === 'play' ? '#39ff14' : 'var(--line)';
+    li.style.borderLeftColor = st.k === 'win' ? 'var(--accent)' : st.k === 'play' ? '#39ff14' : '#5a1a1a';
     li.appendChild(el('span', 't', hhmm(n(p.startedAt))));
     li.appendChild(el('span', 'n', p.name || '???'));
     const chips = el('span', ''); chips.appendChild(el('span', 'chip ' + st.k, st.t)); if (p.test) chips.appendChild(el('span', 'chip test', 'TESTE')); li.appendChild(chips);
@@ -271,7 +304,7 @@ function render(){
   const rk = (($('#hideTests').checked) ? ranking.filter(r => !testKeys.has((r.name || '').toLowerCase() + '|' + Math.floor(n(r.ms) / 100))) : ranking).slice(0, 10);
   const ol = $('#rank'); ol.innerHTML = '';
   if (!rk.length) ol.appendChild(el('li', 'muted', 'Ninguém derrotou o boss ainda.'));
-  rk.forEach((r, i) => { const li = el('li'); li.appendChild(el('span', 'p', String(i + 1).padStart(2, '0'))); li.appendChild(el('span', 'nm', r.name || '???')); li.appendChild(el('span', 'tm', fmt(n(r.ms)))); ol.appendChild(li); });
+  rk.forEach((r, i) => { const li = el('li'); li.appendChild(el('span', 'p', String(i + 1).padStart(2, '0'))); li.appendChild(el('span', 'nm', r.name || '???')); li.appendChild(el('span', 'tm', fmt(n(r.ms)))); const x = el('button', 'x', 'APAGAR'); x.type = 'button'; x.setAttribute('aria-label', 'Apagar ' + (r.name || '') + ' do ranking'); x.addEventListener('click', () => confirmBtn(x, 'APAGAR', () => DEL && DEL('ranking', r.id).then(() => say(`${r.name} saiu do ranking.`)).catch(() => say('Não consegui apagar. Confira as regras.')))); li.appendChild(x); ol.appendChild(li); });
 
   // funnel
   hbar($('#chFunnel'), list.length ? LEVELS.map((id, i) => {
@@ -305,6 +338,7 @@ function render(){
       else td.textContent = c;
       tr.appendChild(td);
     });
+    const td = el('td'), x = el('button', 'x', 'APAGAR'); x.type = 'button'; x.setAttribute('aria-label', 'Apagar ' + (p.name || '')); x.addEventListener('click', () => confirmBtn(x, 'APAGAR', () => DEL && DEL('players', p.id).then(() => say(`${p.name} apagado.`)).catch(() => say('Não consegui apagar. Confira as regras.')))); td.appendChild(x); tr.appendChild(td);
     tb.appendChild(tr);
   });
 }
@@ -319,26 +353,55 @@ $('#btnCsv').addEventListener('click', () => {
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 });
 $('#hideTests').addEventListener('change', render);
+$('#hideGhosts').addEventListener('change', render);
 let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 150); });
 setInterval(render, 30000); // refresh "jogando agora" even without new data
 
-// ---------- Firestore
+// ---------- Firebase: only the presenter's Google account gets in
 const setLive = (on, txt) => { $('#live').className = 'live ' + (on ? 'on' : 'off'); $('#liveTxt').textContent = txt; };
 try {
-  const [{ initializeApp }, fs] = await Promise.all([
+  const [{ initializeApp }, fs, au] = await Promise.all([
     import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
-    import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+    import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js'),
+    import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js')
   ]);
-  const db = fs.getFirestore(initializeApp(firebaseConfig));
-  fs.onSnapshot(fs.collection(db, 'players'), s => {
-    players = s.docs.map(d => ({id: d.id, ...d.data()}));
-    setLive(true, 'AO VIVO'); render();
-  }, e => setLive(false, 'SEM ACESSO: confira as regras do Firestore'));
-  fs.onSnapshot(fs.query(fs.collection(db, 'ranking'), fs.orderBy('ms', 'asc'), fs.limit(50)), s => {
-    ranking = s.docs.map(d => d.data()); render();
-  }, () => {});
+  const app = initializeApp(firebaseConfig);
+  const db = fs.getFirestore(app), auth = au.getAuth(app);
+  let unsubs = [];
+  DEL = (col, id) => fs.deleteDoc(fs.doc(db, col, id));
+  $('#btnLogin').addEventListener('click', () => {
+    $('#gateMsg').textContent = 'Abrindo o login do Google…';
+    au.signInWithPopup(auth, new au.GoogleAuthProvider()).catch(e => {
+      $('#gateMsg').textContent = e && e.code === 'auth/unauthorized-domain'
+        ? 'Este endereço ainda não está autorizado no Firebase (Authentication → Settings → Domínios autorizados).'
+        : 'Login cancelado ou bloqueado. Libere pop-ups e tente de novo.';
+    });
+  });
+  $('#btnLogout').addEventListener('click', () => au.signOut(auth));
+  $('#btnDelTests').addEventListener('click', () => confirmBtn($('#btnDelTests'), 'APAGAR TESTES', async () => {
+    const tp = players.filter(p => p.test);
+    const keys = new Set(tp.filter(p => p.finishedMs != null).map(p => (p.name || '').toLowerCase() + '|' + Math.floor(p.finishedMs / 100)));
+    const tr = ranking.filter(r => keys.has((r.name || '').toLowerCase() + '|' + Math.floor(n(r.ms) / 100)));
+    try { await Promise.all([...tp.map(p => DEL('players', p.id)), ...tr.map(r => DEL('ranking', r.id))]); say(`${tp.length} jogador(es) de teste e ${tr.length} resultado(s) apagados.`); }
+    catch { say('Não consegui apagar tudo. Confira as regras do Firestore.'); }
+  }));
+  au.onAuthStateChanged(auth, user => {
+    unsubs.forEach(f => f()); unsubs = [];
+    const ok = user && user.email === ADMIN_EMAIL;
+    $('#gate').hidden = !!ok; $('#app').hidden = !ok;
+    if (user && !ok){ $('#gateMsg').textContent = `A conta ${user.email} não tem acesso a este painel.`; au.signOut(auth); return; }
+    if (!ok){ $('#btnLogin').hidden = false; return; }
+    $('#who').textContent = user.email;
+    unsubs.push(fs.onSnapshot(fs.collection(db, 'players'), s => {
+      players = s.docs.map(d => ({id: d.id, ...d.data()}));
+      setLive(true, 'AO VIVO'); render();
+    }, () => setLive(false, 'SEM ACESSO: confira as regras do Firestore')));
+    unsubs.push(fs.onSnapshot(fs.query(fs.collection(db, 'ranking'), fs.orderBy('ms', 'asc'), fs.limit(50)), s => {
+      ranking = s.docs.map(d => ({id: d.id, ...d.data()})); render();
+    }, () => {}));
+  });
 } catch (e) {
-  setLive(false, 'SEM CONEXÃO COM O FIREBASE');
+  $('#gateMsg').textContent = 'Sem conexão com o Firebase. Confira a internet e recarregue.';
 }
 render();
 </script>
