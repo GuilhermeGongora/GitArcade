@@ -14,6 +14,8 @@ service cloud.firestore {
       return s is string && s.matches("^[0-9A-Za-zÀ-ÿ][0-9A-Za-zÀ-ÿ ._'-]{1,23}$");
     }
     function okCount(v, max) { return v is int && v >= 0 && v <= max; }
+    // LinkedIn: só o identificador do perfil (linkedin.com/in/<id>); o link é sempre montado pelo jogo
+    function okLi(s) { return s is string && s.matches('^[A-Za-z0-9-]{3,100}$'); }
 
     // Telemetria de cada partida (só o dono escreve, só o admin lê a lista)
     match /players/{runId} {
@@ -30,21 +32,29 @@ service cloud.firestore {
         && request.resource.data.t0 == resource.data.t0
         && request.resource.data.lastSeen == request.time
         && request.resource.data.cleared >= resource.data.cleared
+        && request.resource.data.pen >= resource.data.get('pen', 0)
+        && request.resource.data.skipped >= resource.data.get('skipped', 0)
+        && (resource.data.get('over', null) == null || request.resource.data.over == resource.data.over)
         && (request.time > resource.data.lastSeen + duration.value(3, 's')
             || (request.resource.data.left == true && resource.data.left != true));
 
       function validPlayer(d) {
         return d.keys().hasOnly(['name','startedAt','lastSeen','level','cleared','finishedMs','score',
-              'hintsUsed','cmdTotal','errTotal','cmds','errs','device','test','room','left','uid','t0'])
+              'hintsUsed','skipped','pen','over','eggs','cmdTotal','errTotal','cmds','errs','device','test','room','left','li','uid','t0'])
           && d.keys().hasAll(['name','startedAt','lastSeen','level','cleared','finishedMs','score',
-              'hintsUsed','cmdTotal','errTotal','cmds','errs','device','test','room','left','uid','t0'])
+              'hintsUsed','skipped','pen','over','eggs','cmdTotal','errTotal','cmds','errs','device','test','room','left','li','uid','t0'])
           && okName(d.name)
           && d.startedAt is int
           && d.level is string && d.level.size() <= 8
-          && okCount(d.cleared, 9)
+          && okCount(d.cleared, 16)
           && (d.finishedMs == null || okCount(d.finishedMs, 360000000))
-          && okCount(d.score, 9000)
-          && okCount(d.hintsUsed, 3)
+          && okCount(d.score, 16000)
+          && okCount(d.hintsUsed, 32)
+          && okCount(d.skipped, 2)
+          && okCount(d.pen, 1920000) && d.pen % 60000 == 0
+          && (d.over == null || d.over in ['surrender', 'timeout'])
+          && okCount(d.eggs, 40)
+          && d.li is string && (d.li == '' || okLi(d.li))
           && okCount(d.cmdTotal, 100000) && okCount(d.errTotal, 100000)
           && d.cmds is map && d.cmds.size() <= 30
           && d.errs is map && d.errs.size() <= 30
@@ -64,12 +74,14 @@ service cloud.firestore {
       allow update: if false;
 
       function validEntry(d) {
-        return d.keys().hasOnly(['name','ms','score','at','uid','run','manual'])
+        return d.keys().hasOnly(['name','ms','score','pen','li','at','uid','run','manual'])
           && d.keys().hasAll(['name','ms','at'])
           && okName(d.name)
           && d.ms is int && d.ms >= 30000 && d.ms < 36000000
           && d.at is string && d.at.size() <= 40
-          && (!('score' in d) || d.score == null || okCount(d.score, 9000));
+          && (!('score' in d) || d.score == null || okCount(d.score, 16000))
+          && (!('pen' in d) || okCount(d.pen, 1920000))
+          && (!('li' in d) || okLi(d.li));
       }
       function validRun(d) {
         return validEntry(d)
@@ -80,10 +92,14 @@ service cloud.firestore {
       }
       function runMatches(d, p) {
         return p.uid == request.auth.uid
-          && p.cleared == 9
+          && p.cleared == 16
+          && p.over == null
           && p.finishedMs == d.ms
           && p.name == d.name
-          && request.time.toMillis() - p.t0.toMillis() >= d.ms - 20000;
+          && p.pen == d.get('pen', 0)
+          && p.li == d.get('li', '')
+          // o tempo do ranking inclui a penalidade das dicas; o tempo real no servidor precisa cobrir o resto
+          && request.time.toMillis() - p.t0.toMillis() >= d.ms - d.get('pen', 0) - 20000;
       }
     }
 

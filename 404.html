@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-4boXaKFPJYl3e75GSd/nCv25lsFdBGPYf01S6wpmc4Y=' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com; frame-src https://gitarcade-f22cb.firebaseapp.com https://accounts.google.com; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>404 · Git Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+:root{--bg:#0b0b1a;--fg:#e8e6d9;--mut:#9a9ab8;--blob:#39ff14;--commit:#ffd23f;--ref:#ff2bd6;--head:#ff3b3b}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--fg)}
+body{font-family:"VT323","Courier New",monospace;font-size:22px;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px}
+main{max-width:640px;width:100%;border:4px solid var(--ref);box-shadow:8px 8px 0 #000;padding:28px 22px;text-align:center;background:#12122b}
+h1{font-family:"Press Start 2P",monospace;font-size:clamp(28px,8vw,56px);color:var(--head);text-shadow:5px 5px 0 #000;margin:0 0 18px}
+pre{background:#05050f;border:2px solid #2a2a4a;color:var(--blob);text-align:left;padding:12px;white-space:pre-wrap;word-break:break-all;margin:0 0 16px;font:inherit}
+p{margin:0 0 16px;color:var(--mut)}
+a{display:inline-block;font-family:"Press Start 2P",monospace;font-size:12px;color:#0b0b1a;background:var(--commit);padding:14px 18px;text-decoration:none;box-shadow:4px 4px 0 #000}
+a:focus-visible{outline:3px solid var(--blob);outline-offset:3px}
+</style>
+</head>
+<body>
+<main>
+  <h1>404</h1>
+  <pre id="err">fatal: caminho não encontrado</pre>
+  <p id="tip">Essa página não existe neste repositório. Mas talvez exista uma pasta escondida por aqui…</p>
+  <a id="home" href="./">VOLTAR AO JOGO</a>
+</main>
+<script>
+(function(){
+  var path = location.pathname, i = path.indexOf('/.git');
+  // the .git treasure hunt lives inside the game: /<base>/.git/HEAD -> /<base>/#/.git/HEAD
+  if (i >= 0){ location.replace(path.slice(0, i + 1) + '#/' + path.slice(i + 1)); return; }
+  var seg = path.split('/').filter(Boolean);
+  var base = seg.length && /^gitarcade$/i.test(seg[0]) ? '/' + seg[0] + '/' : '/';
+  var lang = 'pt'; try { lang = JSON.parse(localStorage.getItem('gitarcade-lang') || '"pt"'); } catch (e) {}
+  var T = {
+    pt: ['fatal: caminho não encontrado', 'Essa página não existe neste repositório. Mas talvez exista uma pasta escondida por aqui…', 'VOLTAR AO JOGO'],
+    en: ['fatal: path not found', 'This page does not exist in this repository. But there might be a hidden folder around here…', 'BACK TO THE GAME'],
+    es: ['fatal: ruta no encontrada', 'Esta página no existe en este repositorio. Pero quizás haya una carpeta escondida por aquí…', 'VOLVER AL JUEGO']
+  }[lang] || null;
+  if (lang === 'en' || lang === 'es') document.documentElement.lang = lang;
+  var shown = path; try { shown = decodeURIComponent(path); } catch (e) {}
+  if (T){ document.getElementById('err').textContent = T[0] + ": '" + shown.slice(0, 80) + "'"; document.getElementById('tip').textContent = T[1]; document.getElementById('home').textContent = T[2]; }
+  document.getElementById('home').href = base;
+})();
+</script>
+</body>
+</html>

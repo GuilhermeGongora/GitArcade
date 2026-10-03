@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-HNm8g42HRKdnDanqDXWv6WDg6ODIkOQRdfTfF1D0Yrs=' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com; frame-src https://gitarcade-f22cb.firebaseapp.com https://accounts.google.com; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-dsyZwFdVYsDDT1ijeNvuz+GWDT5gtZL5VerbbUpaMx8=' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com; frame-src https://gitarcade-f22cb.firebaseapp.com https://accounts.google.com; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Painel Git Arcade</title>
@@ -59,7 +59,7 @@ label.tg input{width:18px;height:18px;accent-color:var(--ok)}
 .feed .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:22px}
 .feed .meta{grid-column:2 / 4;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;color:var(--mut);font-size:17px}
 .prog{display:flex;gap:3px}
-.prog i{width:12px;height:10px;background:#1b1b33}
+.prog i{width:9px;height:10px;background:#1b1b33}
 .prog i.on{background:var(--ok)}
 .chip{font-family:var(--px);font-size:8px;padding:4px 6px 3px;border:2px solid}
 .chip.play{color:#39ff14;border-color:#39ff14}
@@ -67,6 +67,9 @@ label.tg input{width:18px;height:18px;accent-color:var(--ok)}
 .chip.win{color:#14100a;background:var(--accent);border-color:var(--accent)}
 .chip.test{color:var(--err);border-color:var(--err)}
 .chip.room{color:var(--accent);border-color:var(--accent)}
+.li{display:inline-block;font-family:var(--px);font-size:8px;line-height:1;padding:3px 4px 2px;background:#0a66c2;color:#fff;text-decoration:none;vertical-align:3px}
+.chip.over{color:#fff;background:var(--err);border-color:var(--err)}
+.prog i.w2{margin-left:4px}
 .manual summary{font-family:var(--px);font-size:9px;color:var(--mut);cursor:pointer;padding:6px 0}
 #manForm{display:flex;flex-direction:column;gap:6px;max-width:420px}
 #manForm label{font-family:var(--px);font-size:8px;color:var(--cy);margin-top:4px}
@@ -136,6 +139,7 @@ td.num,th.num{text-align:right}
   <section class="kpis" aria-label="Resumo">
     <div class="kpi"><small>ENTRARAM</small><b id="kIn">0</b><span id="kInSub">—</span></div>
     <div class="kpi"><small>JOGANDO AGORA</small><b id="kNow">0</b><span>com o jogo aberto agora</span></div>
+    <div class="kpi"><small>CERT. MUNDO 1</small><b id="kW1">0</b><span id="kW1Sub">derrotaram o primeiro boss</span></div>
     <div class="kpi"><small>ZERARAM</small><b id="kWin">0</b><span id="kWinSub">—</span></div>
     <div class="kpi"><small>MELHOR TEMPO</small><b id="kBest">—</b><span id="kBestSub">—</span></div>
     <div class="kpi"><small>TEMPO MÉDIO</small><b id="kAvg">—</b><span>de quem zerou</span></div>
@@ -214,7 +218,8 @@ const firebaseConfig = {
   appId: "1:154626906750:web:d53fb8b72d61d8a1f6162f"
 };
 const ADMIN_EMAIL = 'guilhermegongora2007@gmail.com';
-const LEVELS = ['1-1','1-2','2-1','2-2','2-3','3-1','3-2','3-3','BOSS'];
+const LEVELS = ['1-1','1-2','2-1','2-2','2-3','3-1','3-2','3-3','BOSS','4-1','4-2','4-3','4-4','4-5','4-6','BOSS2'];
+const NL = LEVELS.length;
 const $ = s => document.querySelector(s);
 const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
 const NS = 'http://www.w3.org/2000/svg';
@@ -228,6 +233,8 @@ if (window.top !== window.self){ document.documentElement.innerHTML = ''; window
 document.querySelectorAll('img[src="unisanta.png"]').forEach(i => i.addEventListener('error', () => { i.hidden = true; }));
 
 let players = [], ranking = [], reviews = [], seen = new Set(), firstLoad = true;
+const liOk = s => typeof s === 'string' && /^[A-Za-z0-9-]{3,100}$/.test(s);
+function liA(s){ if (!liOk(s)) return null; const a = el('a', 'li', 'in'); a.href = 'https://www.linkedin.com/in/' + s + '/'; a.target = '_blank'; a.rel = 'noopener noreferrer nofollow'; a.title = 'linkedin.com/in/' + s; return a; }
 const starTxt = v => '★'.repeat(n(v)) + '☆'.repeat(5 - n(v));
 const avg = a => a.length ? (a.reduce((s, v) => s + v, 0) / a.length) : null;
 function renderReviews(){
@@ -265,10 +272,12 @@ function renderReviews(){
 
 function status(p){
   if (p.finishedMs != null) return {k: 'win', t: 'ZEROU'};
+  if (p.over === 'timeout') return {k: 'over', t: 'TEMPO ESGOTADO'};
+  if (p.over === 'surrender') return {k: 'over', t: 'DESISTIU'};
   if (!p.left && Date.now() - tms(p.lastSeen) < 120000) return {k: 'play', t: 'JOGANDO'};
   return {k: 'left', t: 'SAIU'};
 }
-const ghost = p => status(p).k === 'left' && !n(p.cleared) && !n(p.cmdTotal);
+const ghost = p => status(p).k === 'left' && !n(p.cleared) && !n(p.cmdTotal) && !p.over;
 function visible(){
   let l = players;
   if ($('#hideTests').checked) l = l.filter(p => !p.test);
@@ -351,30 +360,33 @@ function render(){
   $('#kInSub').textContent = list.length ? `${list.filter(p => p.room).length} com código da sala · ${list.filter(p => p.device === 'mobile').length} no celular` : 'aguardando a turma';
   $('#kNow').textContent = playing.length;
   $('#kWin').textContent = wins.length;
-  $('#kWinSub').textContent = list.length ? `${Math.round(100 * wins.length / list.length)}% de quem entrou` : '—';
+  const w1 = list.filter(p => n(p.cleared) >= 9 || p.finishedMs != null).length;
+  $('#kW1').textContent = w1; $('#kW1Sub').textContent = list.length ? `${Math.round(100 * w1 / list.length)}% de quem entrou derrotou o primeiro boss` : 'derrotaram o primeiro boss';
+  const lost = list.filter(p => p.over).length;
+  $('#kWinSub').textContent = list.length ? `${Math.round(100 * wins.length / list.length)}% de quem entrou · ${lost} perderam para os bosses` : '—';
   $('#kBest').textContent = wins[0] ? fmt(wins[0].finishedMs) : '—';
   $('#kBestSub').textContent = wins[0] ? wins[0].name : '—';
   $('#kAvg').textContent = wins.length ? fmt(wins.reduce((s, p) => s + p.finishedMs, 0) / wins.length) : '—';
   $('#kCmd').textContent = cmdTot.toLocaleString('pt-BR');
   $('#kCmdSub').textContent = cmdTot ? `${Math.round(100 * errTot / cmdTot)}% deram erro` : '—';
   $('#kHint').textContent = hints;
-  $('#kHintSub').textContent = list.length ? `média ${(hints / list.length).toFixed(1)} por jogador` : '—';
+  $('#kHintSub').textContent = list.length ? `média ${(hints / list.length).toFixed(1)} por jogador · cada uma = +1 min` : '—';
 
   // feed
   const feed = $('#feed'); feed.innerHTML = '';
   if (!list.length) feed.appendChild(el('li', 'muted', 'Assim que alguém apertar PRESS START, aparece aqui.'));
   [...list].sort((a, b) => n(b.startedAt) - n(a.startedAt)).slice(0, 60).forEach(p => {
     const st = status(p), li = el('li', seen.has(p.id) || firstLoad ? '' : 'new');
-    li.style.borderLeftColor = st.k === 'win' ? 'var(--accent)' : st.k === 'play' ? '#39ff14' : '#5a1a1a';
+    li.style.borderLeftColor = st.k === 'win' ? 'var(--accent)' : st.k === 'play' ? '#39ff14' : st.k === 'over' ? 'var(--err)' : '#5a1a1a';
     li.appendChild(el('span', 't', hhmm(n(p.startedAt))));
-    li.appendChild(el('span', 'n', p.name || '???'));
+    const nn = el('span', 'n', p.name || '???'); const la = liA(p.li); if (la){ nn.append(' '); nn.appendChild(la); } li.appendChild(nn);
     const chips = el('span', ''); chips.appendChild(el('span', 'chip ' + st.k, st.t)); if (p.room){ chips.append(' '); chips.appendChild(el('span', 'chip room', 'SALA')); } if (p.test) chips.appendChild(el('span', 'chip test', 'TESTE')); li.appendChild(chips);
     const meta = el('div', 'meta');
-    const prog = el('span', 'prog'); prog.setAttribute('aria-label', `${n(p.cleared)} de 9 fases`);
-    for (let i = 0; i < 9; i++) prog.appendChild(el('i', i < n(p.cleared) ? 'on' : ''));
+    const prog = el('span', 'prog'); prog.setAttribute('aria-label', `${n(p.cleared)} de ${NL} fases`);
+    for (let i = 0; i < NL; i++) prog.appendChild(el('i', (i < n(p.cleared) ? 'on' : '') + (i === 9 ? ' w2' : '')));
     meta.appendChild(prog);
-    meta.appendChild(el('span', '', `${n(p.cleared)}/9 · fase ${p.finishedMs != null ? 'BOSS ok' : (p.level || '1-1')}`));
-    meta.appendChild(el('span', '', `${n(p.cmdTotal)} cmds · ${n(p.errTotal)} erros · ${n(p.hintsUsed)} dicas`));
+    meta.appendChild(el('span', '', `${n(p.cleared)}/${NL} · fase ${p.finishedMs != null ? 'BOSS2 ok' : (p.level || '1-1')}`));
+    meta.appendChild(el('span', '', `${n(p.cmdTotal)} cmds · ${n(p.errTotal)} erros · ${n(p.hintsUsed)} dicas (+${Math.round(n(p.pen) / 60000)} min) · ${n(p.skipped)} pulo(s)` + (n(p.eggs) ? ` · ${n(p.eggs)} segredo(s)` : '')));
     if (p.finishedMs != null) meta.appendChild(el('span', '', `tempo ${fmt(p.finishedMs)}`));
     li.appendChild(meta); feed.appendChild(li); seen.add(p.id);
   });
@@ -385,7 +397,7 @@ function render(){
   const rk = (($('#hideTests').checked) ? ranking.filter(r => !testKeys.has((r.name || '').toLowerCase() + '|' + Math.floor(n(r.ms) / 100))) : ranking).slice(0, 10);
   const ol = $('#rank'); ol.innerHTML = '';
   if (!rk.length) ol.appendChild(el('li', 'muted', 'Ninguém derrotou o boss ainda.'));
-  rk.forEach((r, i) => { const li = el('li'); li.appendChild(el('span', 'p', String(i + 1).padStart(2, '0'))); li.appendChild(el('span', 'nm', r.name || '???')); li.appendChild(el('span', 'tm', fmt(n(r.ms)))); const x = el('button', 'x', 'APAGAR'); x.type = 'button'; x.setAttribute('aria-label', 'Apagar ' + (r.name || '') + ' do ranking'); x.addEventListener('click', () => confirmBtn(x, 'APAGAR', () => DEL && DEL('ranking', r.id).then(() => say(`${r.name} saiu do ranking.`)).catch(() => say('Não consegui apagar. Confira as regras.')))); li.appendChild(x); ol.appendChild(li); });
+  rk.forEach((r, i) => { const li = el('li'); li.appendChild(el('span', 'p', String(i + 1).padStart(2, '0'))); const rn = el('span', 'nm', r.name || '???'); const ra = liA(r.li); if (ra){ rn.append(' '); rn.appendChild(ra); } li.appendChild(rn); li.appendChild(el('span', 'tm', fmt(n(r.ms)))); const x = el('button', 'x', 'APAGAR'); x.type = 'button'; x.setAttribute('aria-label', 'Apagar ' + (r.name || '') + ' do ranking'); x.addEventListener('click', () => confirmBtn(x, 'APAGAR', () => DEL && DEL('ranking', r.id).then(() => say(`${r.name} saiu do ranking.`)).catch(() => say('Não consegui apagar. Confira as regras.')))); li.appendChild(x); ol.appendChild(li); });
 
   // funnel
   hbar($('#chFunnel'), list.length ? LEVELS.map((id, i) => {
@@ -410,10 +422,10 @@ function render(){
 
   // table
   const tb = $('#tbl tbody'); tb.innerHTML = '';
-  const order = {play: 0, win: 1, idle: 2};
+  const order = {play: 0, win: 1, over: 2, left: 3};
   [...list].sort((a, b) => order[status(a).k] - order[status(b).k] || n(b.cleared) - n(a.cleared) || n(a.startedAt) - n(b.startedAt)).forEach(p => {
     const tr = el('tr'), st = status(p);
-    const cells = [p.name || '???', hhmm(n(p.startedAt)), null, p.finishedMs != null ? '—' : (p.level || '1-1'), n(p.cleared) + '/9', n(p.cmdTotal), n(p.errTotal), n(p.hintsUsed), fmt(p.finishedMs), String(n(p.score)).padStart(6, '0'), p.device === 'mobile' ? 'celular' : 'computador'];
+    const cells = [p.name || '???', hhmm(n(p.startedAt)), null, p.finishedMs != null ? '—' : (p.level || '1-1'), n(p.cleared) + '/' + NL, n(p.cmdTotal), n(p.errTotal), n(p.hintsUsed), fmt(p.finishedMs), String(n(p.score)).padStart(6, '0'), p.device === 'mobile' ? 'celular' : 'computador'];
     cells.forEach((c, i) => {
       const td = el('td', i >= 4 && i <= 9 ? 'num' : '');
       if (i === 2){ td.appendChild(el('span', 'chip ' + st.k, st.t)); if (p.room){ td.append(' '); td.appendChild(el('span', 'chip room', 'SALA')); } if (p.test){ td.append(' '); td.appendChild(el('span', 'chip test', 'TESTE')); } }
@@ -427,9 +439,9 @@ function render(){
 
 // ---------- CSV
 $('#btnCsv').addEventListener('click', () => {
-  const head = ['nome', 'entrou', 'status', 'fase', 'resolvidas', 'comandos', 'erros', 'dicas', 'tempo', 'tempo_ms', 'score', 'aparelho', 'sala', 'teste'];
+  const head = ['nome', 'entrou', 'status', 'fase', 'resolvidas', 'comandos', 'erros', 'dicas', 'pulos', 'tempo', 'tempo_ms', 'score', 'aparelho', 'sala', 'segredos', 'teste'];
   const q = v => { let t = String(v ?? ''); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; };
-  const lines = [head.join(';')].concat(players.map(p => [p.name, new Date(n(p.startedAt)).toLocaleString('pt-BR'), status(p).t, p.level, n(p.cleared), n(p.cmdTotal), n(p.errTotal), n(p.hintsUsed), fmt(p.finishedMs), p.finishedMs ?? '', n(p.score), p.device, p.room ? 'sim' : 'não', p.test ? 'sim' : 'não'].map(q).join(';')));
+  const lines = [head.join(';')].concat(players.map(p => [p.name, new Date(n(p.startedAt)).toLocaleString('pt-BR'), status(p).t, p.level, n(p.cleared), n(p.cmdTotal), n(p.errTotal), n(p.hintsUsed), n(p.skipped), fmt(p.finishedMs), p.finishedMs ?? '', n(p.score), p.device, p.room ? 'sim' : 'não', n(p.eggs), p.test ? 'sim' : 'não'].map(q).join(';')));
   const blob = new Blob(['﻿' + lines.join('\n')], {type: 'text/csv;charset=utf-8'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'git-arcade-jogadores.csv'; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
