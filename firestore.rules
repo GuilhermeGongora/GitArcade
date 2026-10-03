@@ -1,0 +1,120 @@
+rules_version = '2';
+// Git Arcade: regras do Firestore. Cole no console: Firestore Database → Regras → Publicar.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'guilhermegongora2007@gmail.com'
+        && request.auth.token.email_verified == true
+        && request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+    function signedIn() { return request.auth != null; }
+    function okName(s) {
+      return s is string && s.matches("^[0-9A-Za-zÀ-ÿ][0-9A-Za-zÀ-ÿ ._'-]{1,23}$");
+    }
+    function okCount(v, max) { return v is int && v >= 0 && v <= max; }
+
+    // Telemetria de cada partida (só o dono escreve, só o admin lê a lista)
+    match /players/{runId} {
+      allow get: if isAdmin()
+        || (signedIn() && (resource == null || resource.data.uid == request.auth.uid));
+      allow list, delete: if isAdmin();
+      allow create: if signedIn() && validPlayer(request.resource.data)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.t0 == request.time
+        && request.resource.data.lastSeen == request.time;
+      allow update: if signedIn() && validPlayer(request.resource.data)
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.t0 == resource.data.t0
+        && request.resource.data.lastSeen == request.time
+        && request.resource.data.cleared >= resource.data.cleared
+        && (request.time > resource.data.lastSeen + duration.value(3, 's')
+            || (request.resource.data.left == true && resource.data.left != true));
+
+      function validPlayer(d) {
+        return d.keys().hasOnly(['name','startedAt','lastSeen','level','cleared','finishedMs','score',
+              'hintsUsed','cmdTotal','errTotal','cmds','errs','device','test','room','left','uid','t0'])
+          && d.keys().hasAll(['name','startedAt','lastSeen','level','cleared','finishedMs','score',
+              'hintsUsed','cmdTotal','errTotal','cmds','errs','device','test','room','left','uid','t0'])
+          && okName(d.name)
+          && d.startedAt is int
+          && d.level is string && d.level.size() <= 8
+          && okCount(d.cleared, 9)
+          && (d.finishedMs == null || okCount(d.finishedMs, 360000000))
+          && okCount(d.score, 9000)
+          && okCount(d.hintsUsed, 3)
+          && okCount(d.cmdTotal, 100000) && okCount(d.errTotal, 100000)
+          && d.cmds is map && d.cmds.size() <= 30
+          && d.errs is map && d.errs.size() <= 30
+          && d.device in ['mobile', 'desktop']
+          && d.test is bool && d.room is bool && d.left is bool;
+      }
+    }
+
+    // Ranking: 1 resultado por partida (id = uid_partida), conferido contra a partida
+    match /ranking/{entryId} {
+      allow get: if true;
+      allow list: if request.query.limit <= 10 || isAdmin();
+      allow delete: if isAdmin();
+      allow create: if (isAdmin() && validEntry(request.resource.data) && request.resource.data.manual == true)
+        || (signedIn() && validRun(request.resource.data)
+            && entryId == request.auth.uid + '_' + request.resource.data.run);
+      allow update: if false;
+
+      function validEntry(d) {
+        return d.keys().hasOnly(['name','ms','score','at','uid','run','manual'])
+          && d.keys().hasAll(['name','ms','at'])
+          && okName(d.name)
+          && d.ms is int && d.ms >= 30000 && d.ms < 36000000
+          && d.at is string && d.at.size() <= 40
+          && (!('score' in d) || d.score == null || okCount(d.score, 9000));
+      }
+      function validRun(d) {
+        return validEntry(d)
+          && !('manual' in d)
+          && d.uid == request.auth.uid
+          && d.run is string && d.run.matches('^[A-Za-z0-9_-]{4,40}$')
+          && runMatches(d, get(/databases/$(database)/documents/players/$(d.run)).data);
+      }
+      function runMatches(d, p) {
+        return p.uid == request.auth.uid
+          && p.cleared == 9
+          && p.finishedMs == d.ms
+          && p.name == d.name
+          && request.time.toMillis() - p.t0.toMillis() >= d.ms - 20000;
+      }
+    }
+
+    // Avaliações: 1 por partida (id = uid_partida). Nota do minicurso só com o código da sala,
+    // conferido aqui no servidor pelo hash (o código não aparece no arquivo).
+    match /reviews/{reviewId} {
+      allow get, list, delete: if isAdmin();
+      allow create: if signedIn() && validReview(request.resource.data)
+        && reviewId == request.auth.uid + '_' + request.resource.data.run;
+      allow update: if signedIn() && validReview(request.resource.data)
+        && reviewId == request.auth.uid + '_' + request.resource.data.run
+        && resource.data.uid == request.auth.uid
+        && request.time > resource.data.at + duration.value(10, 's');
+
+      function validReview(d) {
+        return d.keys().hasOnly(['name','game','course','comment','room','roomKey','run','uid','at'])
+          && d.keys().hasAll(['name','game','comment','room','run','uid','at'])
+          && okName(d.name)
+          && d.uid == request.auth.uid
+          && d.at == request.time
+          && d.game is int && d.game >= 1 && d.game <= 5
+          && d.comment is string && d.comment.size() <= 500
+          && d.run is string && d.run.matches('^[A-Za-z0-9_-]{4,40}$')
+          && get(/databases/$(database)/documents/players/$(d.run)).data.uid == request.auth.uid
+          && ((d.room == false && !('course' in d) && !('roomKey' in d))
+              || (d.room == true
+                  && d.course is int && d.course >= 1 && d.course <= 5
+                  && d.roomKey is string && d.roomKey.size() <= 40
+                  && hashing.sha256(d.roomKey + '|arcade-sala').toHexString().lower()
+                       == '5abc76e08b40ad535268aa07f5e8b244a8c457d8180ce0fcb856c56d55e413c3'));
+      }
+    }
+  }
+}

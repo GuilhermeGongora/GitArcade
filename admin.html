@@ -2,8 +2,12 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-HNm8g42HRKdnDanqDXWv6WDg6ODIkOQRdfTfF1D0Yrs=' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com; frame-src https://gitarcade-f22cb.firebaseapp.com https://accounts.google.com; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Painel Git Arcade</title>
+<link rel="icon" type="image/png" sizes="64x64" href="data:image/png;base64,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">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -62,6 +66,13 @@ label.tg input{width:18px;height:18px;accent-color:var(--ok)}
 .chip.idle{color:var(--mut);border-color:var(--mut)}
 .chip.win{color:#14100a;background:var(--accent);border-color:var(--accent)}
 .chip.test{color:var(--err);border-color:var(--err)}
+.chip.room{color:var(--accent);border-color:var(--accent)}
+.manual summary{font-family:var(--px);font-size:9px;color:var(--mut);cursor:pointer;padding:6px 0}
+#manForm{display:flex;flex-direction:column;gap:6px;max-width:420px}
+#manForm label{font-family:var(--px);font-size:8px;color:var(--cy);margin-top:4px}
+#manForm input{font-family:var(--vt);font-size:20px;padding:6px 8px;background:#08081a;color:var(--fg);border:2px solid var(--line)}
+#manForm .btn{margin-top:8px;align-self:flex-start}
+#manMsg{color:var(--accent);min-height:1.2em}
 .chip.left{color:#ff3b3b;border-color:#ff3b3b}
 .x{font-family:var(--px);font-size:8px;padding:4px 6px 3px;background:none;color:var(--mut);border:2px solid var(--line);cursor:pointer}
 .x:hover{color:#ff3b3b;border-color:#ff3b3b}
@@ -90,24 +101,33 @@ td.num,th.num{text-align:right}
 .rank .p{font-family:var(--px);font-size:10px;color:var(--accent)}
 .rank .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rank .tm{font-family:var(--px);font-size:10px;color:var(--cy)}
+.revhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.revlist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;max-height:560px;overflow-y:auto}
+.revlist li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 12px;background:#08081a;border-left:4px solid var(--accent)}
+.revlist .who{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:21px}
+.revlist .sc{color:var(--mut);font-size:19px}
+.revlist .sc b{color:var(--accent);font-weight:400;letter-spacing:1px}
+.revlist .cm{grid-column:1 / 3;font-size:20px;white-space:pre-wrap;overflow-wrap:anywhere}
+.revlist .cm.none{color:var(--mut)}
 @media (prefers-reduced-motion: reduce){*{animation:none!important}}
 </style>
 </head>
 <body>
 <section class="card gate" id="gate">
-  <img src="unisanta.png" alt="Unisanta" onerror="this.hidden=true">
+  <img src="unisanta.png" alt="Unisanta">
   <h1>PAINEL DO PALESTRANTE</h1>
   <p class="muted" id="gateMsg">Acesso restrito. Entre com a conta Google do palestrante.</p>
   <button class="btn" id="btnLogin" type="button">ENTRAR COM GOOGLE</button>
 </section>
 <div class="wrap" id="app" hidden>
   <header class="card top">
-    <img src="unisanta.png" alt="Unisanta" onerror="this.hidden=true">
+    <img src="unisanta.png" alt="Unisanta">
     <h1>PAINEL DO PALESTRANTE</h1>
     <div class="live" id="live"><span class="dot"></span><span id="liveTxt">CONECTANDO…</span></div>
     <label class="tg"><input type="checkbox" id="hideTests" checked> ocultar testes</label>
     <label class="tg"><input type="checkbox" id="hideGhosts" checked> ocultar quem saiu sem jogar</label>
     <button class="btn" id="btnDelTests" type="button">APAGAR TESTES</button>
+    <button class="btn" id="btnWipe" type="button" title="Apaga jogadores, ranking e avaliações. Use antes da aula, nunca depois.">ZERAR TUDO</button>
     <button class="btn" id="btnCsv" type="button">EXPORTAR CSV</button>
     <span class="who" id="who"></span><button class="btn" id="btnLogout" type="button">SAIR</button>
     <p id="msg" style="width:100%"></p>
@@ -132,6 +152,15 @@ td.num,th.num{text-align:right}
       <section class="card">
         <h2>RANKING · MENOR TEMPO</h2>
         <ol class="rank" id="rank"></ol>
+        <details class="manual"><summary>LANÇAR RESULTADO DE UM CERTIFICADO</summary>
+          <form id="manForm" autocomplete="off">
+            <label for="mName">NOME (como no certificado)</label><input id="mName" type="text" maxlength="24">
+            <label for="mTime">TEMPO</label><input id="mTime" type="text" inputmode="decimal" placeholder="12:34.5">
+            <label for="mCode">CÓDIGO DE VERIFICAÇÃO</label><input id="mCode" type="text" maxlength="7" placeholder="a1b2c3d">
+            <button class="btn" type="submit">LANÇAR NO RANKING</button>
+            <p id="manMsg" aria-live="polite"></p>
+          </form>
+        </details>
       </section>
       <section class="card">
         <h2>ENTRADAS AO LONGO DO TEMPO</h2>
@@ -150,6 +179,20 @@ td.num,th.num{text-align:right}
       <div class="chart" id="chCmds"></div>
     </section>
   </div>
+
+  <section class="card" id="revCard">
+    <div class="revhead"><h2>AVALIAÇÕES</h2><button class="btn" id="btnRevCsv" type="button">EXPORTAR AVALIAÇÕES</button></div>
+    <div class="kpis">
+      <div class="kpi"><small>NOTA DO JOGO</small><b id="rGame">—</b><span id="rGameSub">nenhuma avaliação ainda</span></div>
+      <div class="kpi"><small>NOTA DO MINICURSO</small><b id="rCourse">—</b><span id="rCourseSub">só quem tem o código da sala</span></div>
+      <div class="kpi"><small>COMENTÁRIOS</small><b id="rCom">0</b><span id="rComSub">—</span></div>
+    </div>
+    <div class="grid">
+      <div><p class="muted">Jogo: quantas avaliações por nota</p><div class="chart" id="chRevGame"></div></div>
+      <div><p class="muted">Minicurso: quantas avaliações por nota</p><div class="chart" id="chRevCourse"></div></div>
+    </div>
+    <ul class="revlist" id="revList"></ul>
+  </section>
 
   <section class="card">
     <h2>TODOS OS JOGADORES</h2>
@@ -179,12 +222,50 @@ const sv = (t, a) => { const e = document.createElementNS(NS, t); for (const k i
 const fmt = ms => { if (ms == null) return '—'; const t = Math.floor(ms / 100), d = t % 10, s = Math.floor(t / 10) % 60, m = Math.floor(t / 600) % 60, h = Math.floor(t / 36000); return (h ? h + ':' : '') + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0') + '.' + d; };
 const hhmm = ts => new Date(ts).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
 const n = v => Number(v) || 0;
+const tms = v => v && typeof v.toMillis === 'function' ? v.toMillis() : n(v); // Firestore Timestamp or number
+// never run inside someone else's frame (clickjacking on the delete buttons)
+if (window.top !== window.self){ document.documentElement.innerHTML = ''; window.top.location = window.self.location.href; }
+document.querySelectorAll('img[src="unisanta.png"]').forEach(i => i.addEventListener('error', () => { i.hidden = true; }));
 
-let players = [], ranking = [], seen = new Set(), firstLoad = true;
+let players = [], ranking = [], reviews = [], seen = new Set(), firstLoad = true;
+const starTxt = v => '★'.repeat(n(v)) + '☆'.repeat(5 - n(v));
+const avg = a => a.length ? (a.reduce((s, v) => s + v, 0) / a.length) : null;
+function renderReviews(){
+  const g = reviews.map(r => n(r.game)).filter(v => v >= 1 && v <= 5);
+  const c = reviews.filter(r => r.room).map(r => n(r.course)).filter(v => v >= 1 && v <= 5);
+  const com = reviews.filter(r => (r.comment || '').trim());
+  const ag = avg(g), ac = avg(c);
+  $('#rGame').textContent = ag == null ? '—' : ag.toFixed(1).replace('.', ',') + ' ★';
+  $('#rGameSub').textContent = g.length ? `${g.length} avaliação(ões)` : 'nenhuma avaliação ainda';
+  $('#rCourse').textContent = ac == null ? '—' : ac.toFixed(1).replace('.', ',') + ' ★';
+  $('#rCourseSub').textContent = c.length ? `${c.length} participante(s) do minicurso` : 'só quem tem o código da sala';
+  $('#rCom').textContent = com.length;
+  $('#rComSub').textContent = reviews.length ? `de ${reviews.length} avaliação(ões)` : '—';
+  const dist = (arr, what) => arr.length ? [5, 4, 3, 2, 1].map(k => { const t = arr.filter(v => v === k).length; return {label: k + ' ★', total: t, parts: [{v: t, c: 'var(--accent)'}], tip: `${what}: ${t} nota(s) ${k}`}; }) : [];
+  hbar($('#chRevGame'), dist(g, 'Jogo'), {labelW: 56, aria: 'Distribuição das notas do jogo', empty: 'Sem avaliações ainda.'});
+  hbar($('#chRevCourse'), dist(c, 'Minicurso'), {labelW: 56, aria: 'Distribuição das notas do minicurso', empty: 'Sem avaliações do minicurso ainda.'});
+  const ul = $('#revList'); ul.innerHTML = '';
+  if (!reviews.length) ul.appendChild(el('li', 'muted', 'As avaliações aparecem aqui assim que os alunos enviarem.'));
+  [...reviews].sort((a, b) => tms(b.at) - tms(a.at)).forEach(r => {
+    const li = el('li'), who = el('div', 'who');
+    who.appendChild(el('span', 'feedname', r.name || '???'));
+    if (r.room) who.appendChild(el('span', 'chip room', 'SALA'));
+    const sc = el('span', 'sc'); sc.append('jogo '); sc.appendChild(el('b', '', starTxt(r.game)));
+    if (r.room){ sc.append('  minicurso '); sc.appendChild(el('b', '', starTxt(r.course))); }
+    who.appendChild(sc);
+    if (tms(r.at)) who.appendChild(el('span', 'sc', hhmm(tms(r.at))));
+    li.appendChild(who);
+    const x = el('button', 'x', 'APAGAR'); x.type = 'button'; x.setAttribute('aria-label', 'Apagar avaliação de ' + (r.name || ''));
+    x.addEventListener('click', () => confirmBtn(x, 'APAGAR', () => DEL && DEL('reviews', r.id).then(() => say('Avaliação apagada.')).catch(() => say('Não consegui apagar. Confira as regras.'))));
+    li.appendChild(x);
+    li.appendChild(el('p', 'cm' + ((r.comment || '').trim() ? '' : ' none'), (r.comment || '').trim() || 'sem comentário'));
+    ul.appendChild(li);
+  });
+}
 
 function status(p){
   if (p.finishedMs != null) return {k: 'win', t: 'ZEROU'};
-  if (!p.left && Date.now() - n(p.lastSeen) < 120000) return {k: 'play', t: 'JOGANDO'};
+  if (!p.left && Date.now() - tms(p.lastSeen) < 120000) return {k: 'play', t: 'JOGANDO'};
   return {k: 'left', t: 'SAIU'};
 }
 const ghost = p => status(p).k === 'left' && !n(p.cleared) && !n(p.cmdTotal);
@@ -267,7 +348,7 @@ function render(){
   const cmdTot = list.reduce((s, p) => s + n(p.cmdTotal), 0), errTot = list.reduce((s, p) => s + n(p.errTotal), 0);
   const hints = list.reduce((s, p) => s + n(p.hintsUsed), 0);
   $('#kIn').textContent = list.length;
-  $('#kInSub').textContent = list.length ? `${list.filter(p => p.device === 'mobile').length} no celular` : 'aguardando a turma';
+  $('#kInSub').textContent = list.length ? `${list.filter(p => p.room).length} com código da sala · ${list.filter(p => p.device === 'mobile').length} no celular` : 'aguardando a turma';
   $('#kNow').textContent = playing.length;
   $('#kWin').textContent = wins.length;
   $('#kWinSub').textContent = list.length ? `${Math.round(100 * wins.length / list.length)}% de quem entrou` : '—';
@@ -287,7 +368,7 @@ function render(){
     li.style.borderLeftColor = st.k === 'win' ? 'var(--accent)' : st.k === 'play' ? '#39ff14' : '#5a1a1a';
     li.appendChild(el('span', 't', hhmm(n(p.startedAt))));
     li.appendChild(el('span', 'n', p.name || '???'));
-    const chips = el('span', ''); chips.appendChild(el('span', 'chip ' + st.k, st.t)); if (p.test) chips.appendChild(el('span', 'chip test', 'TESTE')); li.appendChild(chips);
+    const chips = el('span', ''); chips.appendChild(el('span', 'chip ' + st.k, st.t)); if (p.room){ chips.append(' '); chips.appendChild(el('span', 'chip room', 'SALA')); } if (p.test) chips.appendChild(el('span', 'chip test', 'TESTE')); li.appendChild(chips);
     const meta = el('div', 'meta');
     const prog = el('span', 'prog'); prog.setAttribute('aria-label', `${n(p.cleared)} de 9 fases`);
     for (let i = 0; i < 9; i++) prog.appendChild(el('i', i < n(p.cleared) ? 'on' : ''));
@@ -325,6 +406,7 @@ function render(){
   hbar($('#chCmds'), rows, {labelW: 150, aria: 'Comandos mais usados, separando os que deram erro', empty: 'Nenhum comando digitado ainda.'});
 
   timeChart($('#chTime'), list);
+  renderReviews();
 
   // table
   const tb = $('#tbl tbody'); tb.innerHTML = '';
@@ -334,7 +416,7 @@ function render(){
     const cells = [p.name || '???', hhmm(n(p.startedAt)), null, p.finishedMs != null ? '—' : (p.level || '1-1'), n(p.cleared) + '/9', n(p.cmdTotal), n(p.errTotal), n(p.hintsUsed), fmt(p.finishedMs), String(n(p.score)).padStart(6, '0'), p.device === 'mobile' ? 'celular' : 'computador'];
     cells.forEach((c, i) => {
       const td = el('td', i >= 4 && i <= 9 ? 'num' : '');
-      if (i === 2){ td.appendChild(el('span', 'chip ' + st.k, st.t)); if (p.test){ td.append(' '); td.appendChild(el('span', 'chip test', 'TESTE')); } }
+      if (i === 2){ td.appendChild(el('span', 'chip ' + st.k, st.t)); if (p.room){ td.append(' '); td.appendChild(el('span', 'chip room', 'SALA')); } if (p.test){ td.append(' '); td.appendChild(el('span', 'chip test', 'TESTE')); } }
       else td.textContent = c;
       tr.appendChild(td);
     });
@@ -345,11 +427,18 @@ function render(){
 
 // ---------- CSV
 $('#btnCsv').addEventListener('click', () => {
-  const head = ['nome', 'entrou', 'status', 'fase', 'resolvidas', 'comandos', 'erros', 'dicas', 'tempo', 'tempo_ms', 'score', 'aparelho', 'teste'];
-  const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-  const lines = [head.join(';')].concat(players.map(p => [p.name, new Date(n(p.startedAt)).toLocaleString('pt-BR'), status(p).t, p.level, n(p.cleared), n(p.cmdTotal), n(p.errTotal), n(p.hintsUsed), fmt(p.finishedMs), p.finishedMs ?? '', n(p.score), p.device, p.test ? 'sim' : 'não'].map(q).join(';')));
+  const head = ['nome', 'entrou', 'status', 'fase', 'resolvidas', 'comandos', 'erros', 'dicas', 'tempo', 'tempo_ms', 'score', 'aparelho', 'sala', 'teste'];
+  const q = v => { let t = String(v ?? ''); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; };
+  const lines = [head.join(';')].concat(players.map(p => [p.name, new Date(n(p.startedAt)).toLocaleString('pt-BR'), status(p).t, p.level, n(p.cleared), n(p.cmdTotal), n(p.errTotal), n(p.hintsUsed), fmt(p.finishedMs), p.finishedMs ?? '', n(p.score), p.device, p.room ? 'sim' : 'não', p.test ? 'sim' : 'não'].map(q).join(';')));
   const blob = new Blob(['﻿' + lines.join('\n')], {type: 'text/csv;charset=utf-8'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'git-arcade-jogadores.csv'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+$('#btnRevCsv').addEventListener('click', () => {
+  const q = v => { let t = String(v ?? ''); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; };
+  const lines = [['nome', 'sala', 'nota_jogo', 'nota_minicurso', 'comentario', 'enviado'].join(';')].concat(reviews.map(r => [r.name, r.room ? 'sim' : 'não', n(r.game), r.room ? n(r.course) : '', r.comment || '', tms(r.at) ? new Date(tms(r.at)).toLocaleString('pt-BR') : ''].map(q).join(';')));
+  const blob = new Blob(['\ufeff' + lines.join('\n')], {type: 'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'git-arcade-avaliacoes.csv'; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 });
 $('#hideTests').addEventListener('change', render);
@@ -369,6 +458,21 @@ try {
   const db = fs.getFirestore(app), auth = au.getAuth(app);
   let unsubs = [];
   DEL = (col, id) => fs.deleteDoc(fs.doc(db, col, id));
+  const sha1hex = async t => [...new Uint8Array(await crypto.subtle.digest('SHA-1', new TextEncoder().encode(t)))].map(b => b.toString(16).padStart(2, '0')).join('');
+  const cleanName = v => String(v || '').normalize('NFC').replace(/[^0-9A-Za-z\u00C0-\u00FF ._'-]/g, '').replace(/\s+/g, ' ').trim().replace(/^[ ._'-]+/, '').slice(0, 24).trim();
+  const parseTime = v => { const m = String(v || '').trim().match(/^(?:(\d+):)?(\d{1,2}):(\d{2})(?:[.,](\d))?$/); if (!m || +m[3] > 59) return null; return (((+(m[1] || 0)) * 3600 + (+m[2]) * 60 + (+m[3])) * 10 + (+(m[4] || 0))) * 100; };
+  $('#manForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#manMsg'), name = cleanName($('#mName').value), ms = parseTime($('#mTime').value), code = $('#mCode').value.trim().toLowerCase();
+    if (name.length < 2){ msg.textContent = 'Digite o nome exatamente como está no certificado.'; return; }
+    if (ms == null){ msg.textContent = 'Tempo no formato do certificado, por exemplo 12:34.5'; return; }
+    if (ms < 30000 || ms >= 36000000){ msg.textContent = 'Tempo fora do intervalo aceito (30 s a 10 h).'; return; }
+    const ok = (await sha1hex(name.toLowerCase() + '|' + Math.floor(ms / 100) + '|arcade-unisanta')).slice(0, 7);
+    if (code !== ok){ msg.textContent = 'O código não confere com esse nome e tempo. Confira letra por letra.'; return; }
+    if (ranking.some(r => (r.name || '').toLowerCase() === name.toLowerCase() && Math.floor(n(r.ms) / 100) === Math.floor(ms / 100))){ msg.textContent = 'Esse resultado já está no ranking.'; return; }
+    try { await fs.addDoc(fs.collection(db, 'ranking'), {name, ms, at: new Date().toISOString(), manual: true}); msg.textContent = `${name} entrou no ranking com ${fmt(ms)}.`; $('#manForm').reset(); }
+    catch { msg.textContent = 'Não consegui gravar. Confira as regras do Firestore.'; }
+  });
   $('#btnLogin').addEventListener('click', () => {
     $('#gateMsg').textContent = 'Abrindo o login do Google…';
     au.signInWithPopup(auth, new au.GoogleAuthProvider()).catch(e => {
@@ -385,9 +489,18 @@ try {
     try { await Promise.all([...tp.map(p => DEL('players', p.id)), ...tr.map(r => DEL('ranking', r.id))]); say(`${tp.length} jogador(es) de teste e ${tr.length} resultado(s) apagados.`); }
     catch { say('Não consegui apagar tudo. Confira as regras do Firestore.'); }
   }));
+  $('#btnWipe').addEventListener('click', () => confirmBtn($('#btnWipe'), 'ZERAR TUDO', async () => {
+    try {
+      const [ps, rs, vs] = await Promise.all(['players', 'ranking', 'reviews'].map(c => fs.getDocs(fs.collection(db, c))));
+      const refs = [...ps.docs, ...rs.docs, ...vs.docs].map(d => d.ref);
+      for (let i = 0; i < refs.length; i += 400){ const b = fs.writeBatch(db); refs.slice(i, i + 400).forEach(r => b.delete(r)); await b.commit(); }
+      say(`Tudo zerado: ${ps.size} jogador(es), ${rs.size} resultado(s) e ${vs.size} avaliação(ões) apagados.`);
+    } catch { say('Não consegui zerar. Confira as regras do Firestore.'); }
+  }));
   au.onAuthStateChanged(auth, user => {
     unsubs.forEach(f => f()); unsubs = [];
-    const ok = user && user.email === ADMIN_EMAIL;
+    if (user && user.isAnonymous) user = null; // anonymous session from the game in this same browser
+    const ok = !!(user && user.email === ADMIN_EMAIL && user.emailVerified);
     $('#gate').hidden = !!ok; $('#app').hidden = !ok;
     if (user && !ok){ $('#gateMsg').textContent = `A conta ${user.email} não tem acesso a este painel.`; au.signOut(auth); return; }
     if (!ok){ $('#btnLogin').hidden = false; return; }
@@ -398,6 +511,9 @@ try {
     }, () => setLive(false, 'SEM ACESSO: confira as regras do Firestore')));
     unsubs.push(fs.onSnapshot(fs.query(fs.collection(db, 'ranking'), fs.orderBy('ms', 'asc'), fs.limit(50)), s => {
       ranking = s.docs.map(d => ({id: d.id, ...d.data()})); render();
+    }, () => {}));
+    unsubs.push(fs.onSnapshot(fs.collection(db, 'reviews'), s => {
+      reviews = s.docs.map(d => ({id: d.id, ...d.data()})); renderReviews();
     }, () => {}));
   });
 } catch (e) {

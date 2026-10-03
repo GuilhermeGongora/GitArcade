@@ -2,9 +2,13 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-i2DbDBDw0uDhytUarbum++BdBxBGkBFn/rCBvn5erOE=' 'sha256-5dd5WNJoFxr/xeB00G8oyRySOe/VHYk/40eViR6e3sg=' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com; frame-src https://gitarcade-f22cb.firebaseapp.com https://accounts.google.com; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b0b1a">
 <title>Git Arcade</title>
+<link rel="icon" type="image/png" sizes="64x64" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAdYklEQVR42tVbZ3iU1bZe+ysz37TMTDKT3guEJNTQgpRQA0qHBERQOSpwEARE5YjKJCpNbKggCIiigiaAgoD0UKQECARIQgqkh/RkMn3mK+v+AM71/rpSPHLW8+RHJpOZvd/97rXe/a79AfzVQQAwGxhMBRoBSLYJGACAWy9Q/7RtoqoaVsDcs4vA+97bMRNoAABEIAAAlROp58u1oPvfT/svCrwzYOr/vGYCBu+AQBqX09vwZSVapisqrR/Bu1/EgRoAIDMVaMQ7QDS9R/Y3m6i37/3vf8vcCSKQs8GgqDNRB51byHtlS2Dg3kRQ3nuDCZECIGB/gb2JfkFoHmpA5zImv2kZPHOXCTJEIPXzyNf2L6gGEwCFeOdz/ztWP/XOCtabqGm4jkVxmgbbl8iqnEvhw8p/yiMBAIq/gSDz68pqDAoSiyHcdcI/ED0muVTwKtsdyB3itL8qy8MPFFi5EAbAf1ug6Q79j43xGVKbEul2coF4KzEAzTNI+6JN7/+6dubCJuyoRzsXLqE6FH+AiNbzUf4WcRmViwBU0acwnZ+g4XG0XrJuhvlbAbjyKeQzhDv55FGMkXqkE84EGk3AYPadH0gGquTASPnQX9uO7+3V7TjEaJHP5fid2w3mQeV5Q/gWyvB7MYeUhyLNdlrigNYfu0XvaijpEPHq6yvzfU4HbMXDagrK5ESqYqiZAG6vjnRc41x6OAHAeyx7mHikSYWkgQgAABl/fPWwgCAp/xHylHGolx060nl0uaRX5356YOOCk84XrvZXaXZ+REseF8EShtSca8HrMZe0Cfpivqf7ihJoEDzAumSiCxAzgWpvBDMq4FkAOAipAJD1NwOAAIQAYL4R1CEzqDTOC9zNKghVemGomkZk2qWrg4MPLOi+09Yp5sxN6TatJKEseH/jDAk4vKP24EQB07QDrKLCG5nkaiK+pCeC03jZ/7v9na9bWG9dqroupKuNAiITY0kaiOZlEC2TEz8AADL1LuCPAwMoFuQCSxKFUHw6sESmhywVFLAycATwMLP/N5ZKr1h4p9MkKrJ4v6Paw7c2Aeu+1gLmCXoGmJ3eHlev9paAUAg7uke5LFzB1S0fkq1Nq+y2pOfCwncVhzTR4fX6cbdMdotXMdvV4pYKAQQA6d/aAB9Cpjza2ArADX9dNl9+3S+DOchQ50DWfgsaD40ZL2854502dX1LgHVxyHJXuSC7MTXINsw3U6cjRWryPc/vj9nYIPdXkISzv3Gn8ncERhRC5Pr1vxxM5A9q5jtPK7ADRQhTh9g+2lyq+8YZe3fiDwXAIxU9uBbkiEgAANYsn/g99glDpIOEI0wCPgOxe9equ00emvjtz2dXGq7g1xwK0zQo+QSjRRaGe+iwpigISnau5szCP9WYbVIc//w1JsnZ0/eKK8IPjwzW2nNC/dzoF4DWFfSZP6rFv70KZKYCTQggWQBuQgjuWJ00utdt94i2BjVcoUOpFgFsLMiHfWhraD+WG7gz+4LeB35khev7tdKleEdbCRC4JrJerFqD9UHSHudeLXbbpxo8xcodPNhKx5eVK4HSUbXcQhvtVCCwMrEAAUjpZyDbCMD+/UkwC8RBANy2t6gpWkI/Z2mrGExXVENZfx/Lj41pqjZHhXrMwO25SWU4QaWcMDQ1TArh1+qkmHYWD53S1pll0vXQceaWoj2Bl/hd7DS1SJFj+XJzsovonhAl3M0JeVGRnrwOKjG6IZoHY4MsggIPNp2FyImzyazZG3ERZgL97yr0nwIATUBBOmD5i9Q0XS9coWujwuCwBqzZFOSCnL8N1iNe9E+1JK6X71MTm56S13CJUEmDo4SSqEQXUeYDRZq5uLUSO/fos21J5qHWi1e+Vfk2NNL2MmTtHOs6+EQnaWp/mRCh36OK4pQI2gg3INA9EYD29KKfUyuwEwACGB9sOzzcFkgHJAQQPMSFRdSCyiNC4s3u/HbtGBTHeLnoiQxM8hJbX8i9vn771IljP6+8Jgf4QC1UrPeWdpTIXefUnoNBrHRipgCTOr8avYycY7XdNOCjTLIWtFHk9J48n2ahQnap4yS3to0lGts1BZHbaKBbiK5uBptlNJAl5jrYBgBw4sTjon9HmwyFr3Ww82wEXoV+0iua4Y6QMZ9f8E7avXfDKHaDZ5UG0SuEb4cIaQNE542G6BEf01GrZkQHTGtO1fzWBBG4X+NfKUb6tlYw4Y0bocOMRl2HK7hUgdbh3qIryhudT6pFHK5D60uy0o+CQYEI5EGlMfUw9EcE5p78BQCoeBGG3O75+dGoqxauIFnr3DtsiMs+cYpCZhzcq7VcJiz7LX5nvdsjgLfI8IBEALFrikz82CoKhxaZWub6JIkjNUk2qQxZ3O+ks8J8RJ8Iyvlqgnn43G0rptjUA3giJvKIhUoJVCiaUdy+uAackA40ecBSSB5RCaSa1lE/GROoyQ0/xYI924qXneRYrlnNl5mNLYUBz+GIsG/Z1P6XukS0kFi+gG3TiaLcrabUFTkazBLJ2ZOrKobvkHOnAn5R9LhVz1A3aujNo7RUd3stxgSFz8vWpLwyev2mT6gpb5jAVuMlqq4wjHWSpbq0mO+T+D3UAwAQcv8gUA+U+ACgOA0G8j+Qrc1v0pOvh4KWbSFFlXsVoxfkdEwp7248nwLaYQPMMEpNNzwRWDc/c+4rJ3v0FTGuaauPtPWi5spGj/IZroPr0yA9D8G8XOm7ZuGc5zJdc92hAhryNdBsVSbZGUluiECvyDpqbHiamvpq0VKSt2E8URs9jMVPQNpM+4LxbjpKf7DFvO/TVPoJgPR0oNq3gozuSE32HkyW6pR0mugWD12+5tm19PSNkphBhuMRHZyzEws8VI471Htv/5XDTuyUbxszNDcyslLuJWvlotY2cEE9Ilw2o4PqwXcSC39LTIv7PWecYuSQrPPxMc4eUbms92EPbfH3s9ePCmrxy/5GAZWWktt1xU1LO5Za+Bvtbm+atU/vvA0vxxcCPW/9XWH8n9gC9w5AAACtK8lqvY17A84pwdHD3iAF8Bs0i8X0X1/p/Z4hv8fbc4LmCtaKNlJ9+sjz2xcu7zb5ps/ion06ONrFBi8tbgNyU44Nt6XseYcHrT3ieWGy094uvTL2K79pCsfIqMt2KKh0VvqqbQ5Ni5eC5SWZmxbLmwgtjx1j79He1zzpKzPsTQagBmeA8B9hwL3TrgmAOoFAKQfA4TlpAqNolj3Rts2oUaiZ5HfHO3T5EIeXg4f3l53+9UjpxRNLEjSVPf4xvnKirkKmaXeJBYZAfjtTSTxSHhdutbpCFRAavKv7eLXcVz/krNdrcd+MmFLUy//4hv76Un8IlnW1MpKq3kNXuM1szyilEOSVYiWiSoJRb8LOb9KByvj2wRjw8LYXATg8DAJdH7IoeAeLl6Ajfz3RH0s+64yrx6Zc28o9UT8DErIurOfq8TMZnvMPbPhEHn7mGYg59n5swIvmod6tt7hAZ1k33eVh3JS9ELnfRb2P6PeZ5dC977GugWTnW9T8tlmKkrLO/phLgjx8Bx/RtY525qVBAiEAOAtYNAF1v+WQfojMT2AB0GNug3fUOJijbpEPks6qwZsm9I7qALNY6k2NS73o+T5puo3J4boUNLKbObNbP8DbHRFXxIXEAInIaWY6GxIctq7A+um1EDAy8WZHo62Zut0UDY5xvtF9npod2PXsU+ee2/3jjeWnpQu+A/nNw6M8oXLCdi/KU/ChcpDLnnTHrt4D32XkgphxEjDjLz/x4R3L+p5tffMNajb+TqO7t5736EKxhu6I++g4HKaeyW9KWYjV74a2xE/bcZ0OPXtZBmljzr0jy8Pu/lJrsL/7pj7g/JY+vh/cfl8ptrynlq5N0TRu6tzpzFN9XuYjRl0SwrcgJr+VPxsAwLTVxN1bWvt8emVLNz/Mg2APzldh8zrqYNUCOqXmPabfpYD/dZ7/6qArF8I41yd0mWewXuDl/hIajFjNReOPTHfpbYjzGLt9L2ybugQLl3dyjx2bkZ0c9cTHRV9z2LpAbf26g9+Xy7iwtTMg9rkt0zWvVCV5iy0QJtYk+Qq/Qj+cAO+gxquGD9uCjpEbqmcRADBlZsruiS7zfNm3jXG+2MQEOXGKN9q/YnjXagXf9jo9/o8NlkdSBdAEFMkAqXoCdPUdSGW4FaAUPSRIrSRx9AU5SOd1UGvxg9paDYh8PeYDjcWgsV2FMPm1oSvleex0tDSXtV0M61w+ftDRfMuvXuNsR/SMnVDqSprADwK9a15iY8MQ4F4CBc9AmoOU5htcJ+uHMbuHzGJgWBJI+2p/PvSv4IkbL21kZ/WcJWw3EZ/xhV5FnkM6BTuh5ejX3+nPTEk2v6XuaxuqWgGX7o350QihjDsljyDUuOrJFpDA42Wj45iTKmjf5yVel3vwZnendP15P0v107GktM8QKk+bAM0giUz2MZwf/wkEo2Qt22Vt072y+1BOjO6bTikWdTxK2E8QYSFIk/Zf1/aqmmojjaN4knNaATcuimU5Z2+YW02/4akhNUKuzHfMhM+Lp87uOZvPygQq0gO0FCB6K+Jt/OZvDYeGJdvfJh1cJtUKuJSZCvSfmfyfToL3EsvHReBcdQZLVu7H7ROM4k5FP7dRx0GC/IAWmSKJWAorim2UcDkitkUVMyzYUBY9kK2tEUleTVepfxda36Fk3+97Oad8fP+Sf3Qa7lA2O4S6gDCXFBjCezRlbJYnzlku/qxICD+pJvG97b59KyVluLmJtNqdePNSF+IZ65/avduMmtUvG3Kn0ya3T1S2G7uKKTEqfpC+o3WJYZ34BWYCnZDx530Bct+ZPxUomAuEDL4jPFo/Jzn609recMBLanYpqB0C17YbvG7q5b6+KSP8/JX9FfKVO3uiXK2FDy6tbtrjfWvBBytqul9c6+0lXOX6X47nq4Su4hH799rw8zxbtWpCbXLPPO0YVzsI8hkWhuSooMbhCx/hS7Bn0AtS6EKGit5WP2dLRuhXQGgsS5O6ymKgNXg5VGMq0CTr/kwR5j5lI0IWiJAFUG4CLjwdPLd/wEP6oY7enoOcZEABhoNTL4KQmOmm61//NRimlrjw1OB3ydFKpegJEHTWEkVX1TOLizioKTaPONDT77DPk99dJv2mAKXzpTxQ1xPNzph2lGcraVcXHsoMdnMtuX3I6NocGVjp160qO41i45TPACFfZaOJiSQZV+9pkvud/AM7QpgKNPU+uDADoGUjicccFVgdfiQ/qBO1L9AI5yCKuk2FB+p4hE0lDinIXmg3Wc+rm6IVfOdQakDS6d+SlrqV8+rGeSChkIdFNazOy9cFgSoePWu9dHmdPWCc1w4tr/tAmAtVhRbt8GbQsxa4Rsz7U7Dqbbnyo+BMbnB6qjsztZAuyMrCB5n8A50FCAFABFgMoHptJXnf2CRbWHB+IM+HWdnD1hhsNYQXOzwsJzhJKCUEUBHKapgQ+RWE7BbQWqYh9Tq+JreZscpntGnGjXMEu0/JnXobLSuwCYeOHdCXdY9wNsVysMBaINcb7HLwGmsmUC2Dm1cCYY08Bn53/0N0LRpB+/SuXXxhatAnySeAPjmYCA9ay++LASYTUJABMH0pPSZgMG5U1VF+UMxAF79ctv1nGWpdVcQGAMdB6z4KuqpCCNMoKaXGr2+MlMoXy216XmqTiaoqpA/5OknRtn/Rp2Qa2ZLwWGHQ0Z98vQ2EDF99TfXe3EXlpieV8Bl/Qi6JNSxNnrRCdKUd0lxNcBPayPFjgFQ39UxCyMeAKD5Mb4C+H9oP/hKk716kpvr1IeuICIXNR9DUzoqfC32dQfrOUpT3dSWqabXRQ3OGIHSzDah25PiN0sQPuUGnGEoou8SQnCaG+AqUu/C6PvSX1kAhRG2D8SXywVEOJlhOgEaQ+h4opUpHjLP3VUW4qca+TuIMYsRag7Na1gvpuBGEswwJkLyHB/r3851TdXWg9kpqJtKFWRn4lzLg3h6Tl0q/3tgMe3oCOP7w52zzTuc1dX9XZ/kRSox1C2QXO0BleXqM6oOUIki8Xg3HCr0c8QRk0xS87LhKwWlag39WazXTJ8246uP1ta/ESCg1UECcSDyTRrhS9YN5Kn+VHIRMb1DJRfFji0/bVQgRHeoglbaPgLKOjnqXgw0HQJKa+uA90vtOgn4nwQYEACWgIQsA1MDAKPC0fY076WB3Z4vbIO3u8gTrO1Tledm2rubEAol6t3VECCvjsGDNFumbTWG3XvZb5SDV7rCdw6Y0G7vQCTDCRikLPVTcFSXUaHhtqJek2P2q162hRgzUxgiKPCfFJjuobjLihmO2COFKZG/GkNNgOva+/1eDTMikkQfPAQ9kiiICIQREkgYi2EAAAkA1k77Oc75SaXwwdvC5ah25ZXdRxSazG1tl3uGMjho3Pky17aen8OX8ufkQU7G1fy969k/rQyt+f0a3rzpIqP7WX1h6jfBvTo2y5Mf9qGaN+WrlDkLZGue1iMEqjlQIarGRDxatqh60fy83P0SqOksIwEl4OB/goUxRHAQMOQVC3vNM/84q+WnqqhYg2AVCPgJfpAMXqOEQz8GaiAX4ysg88nr5EIkKqqqe7tvk22vjQXm2UPrDumgpZcdlnTsPkK4A+teIfs41a8Ksl2CnVneLp+BQEH9m0ES3LLf16Z7pxyaLDTH9qLiXLUdzp3qnICIFhDwUAA9uiwMQchKE5xC4sBhpPaXlob3X7ePNHVvnOBa2n1IsbAY90yYqWV+c4XcDLlE60dI34epcn1bvRev2clWOcv7psZ4n0c349qekkGEMBOpAmjG+xf3B5Twit3R3QrgPD7J6RbcpnydKu6qIED2XxtgvaMqvUjqAiGTQiYfvbVIPOnlAIEVjIOKzDdQ5WSSoSs2eMbqPYagxHTZmvaAfbelrK4IkGyWTq/i+vc+TYs7nFXd6aA8TedM0KXpeW+8ZDW2DJjt8GKUE4YwEtRLCwKEt+ESoMFG84c3lePHl5fHEVSFGqQLo2D6nT49mLlT1ZmVXrblUKX8LAMB3/d/UFr9njVdNhZGtb1MLTHDHhEAECrcCBwBQvw5exWHBAg4Ix4p/cT8DAGxeowv77p2ZlzPD+/OrFL4nc0Ya2sqeU29pk0f8cgYiy74M899XNkrvRq8o3Aaxtz4Z0OXq8onvSXqmxKkZJgi9vm85BRAnuzuKx+i6HLmjE+46RtT5Z8Cr7TUuB581YHsGddIEwNWtgHmOJVyzFOiPXyr83c4kH2E/RDqHQoddDHTsVzlN+3kjFdm+KTSg3d0zxLUUpkl6WO7pkbxf6rQbMeFnHoclZoYCAUhNRfpRDf2hu8MnAKjkDBBJFoiYDQwhIFS9Ry3UhUm9W4vbsm5USysWb6dOaSxML9yohRKLAoYvapXJdimBY5AeiWRiJ4n3KatmDMnd3F6Gyzrb21Jco63f2CC3ZRhdmqRHn4aWDb1am6uUzfsbTZKJSgcCkA4UFN5pzT8WJEAAAgRgLYDctpfim1eQDwEAiud598bl1NTkjw6tWfjkJ9KVIYr22n1cmWeuRqiShZ3ezYburfMJli5BBF7p4102R7NMAiof/d5pwMRTEg78pGIZ9f+U5MfikhSYgIYMECb/i3mVr8AbhqXSG4jAEtJ2AQAvXNv84jy9y0g2HTe2Os6SLRNT7KlviszyjijrEcU1hYSH6OJH5czWWJ6eTPQjo6ChrOGlyLdv5JJmQ6kENJS+pZovM1ga5Tw1U24gxY2nxa8VdjqCEPEXxDvM+3sZcHclbqeyiVeDIPje7+d7Q4Qlnb2ISTrkIRA/hYiGI5qQ3KMQeXoiRF0phljMh5j29MiXLMGz3Aif8Dd6rix7nf43rkBVrybp0occ4goF4jN6xMUatM1WunAXg1XLYeqjui/0qAGhKifKI+0HqFbcqkQx0gddslD8SR0q1fT1sZ5nw+o/gegGV4ChvLFPT1QGFguqzby169rSNACAOEQZAAUtHzBHca4OUe3nbJAHircgwImcPy8YwlB4VifZVspq6z8i2+onQuSDAEH9FSUSNwJLCEgkWHgRyvFAdSUzbcCcn5q/0faGxI6t9cZnnaqwfpb8Ukq26qSD5TY1dRc1LwfTRoX16tUFMZkmzJelEyLe/pys9m7khoobVfzHnt5cauib1rTOGexc7G+r1jgduFNLFJnegX59yAx0gxIRCKQ/Rky49IcbXEs3vpXXFtMFl0FozqGJurevhAWengOd8lDrh0sS1vHKLz3YeeOtRSZEKhOR3gjA1r/JnseeamlbwFiEpHMfA6Aa/oWjqcm3rk/nnm+ppIM97i5GXlwhF+oWw8y7C8A8VtsAKIDihfAcTqERIYjPp6PwNYg8U97Jv/kHEumqDzI2Zo7u4Rr+/kWMf6PtMwCATEQ6exAwbctl5zAyQHpW/vaJmwtUT+M78DUCMOxXGO81Nt/zA5voEXx8RT7GT3SsoPIbXoRuiEDuCbW/ZQv8n7IIgKd81cagAfSHfHcZCJPsTAjFYxeg+oUPcPv0mtL+yy+3ZYd9z2uYIzXd0ZFMG6ZPz4vIAoCKijBGbBZY0BKySLZL3W62G2y52qfr52u38bNIgTM66PBJTT/WiZJEonjg/Kh4igBLCGBW4Z/fBn8ZAJB95/JkwhL7GxRL2LJmZ1dbfPtnqo486amzF9Z0sn3hsErd3KgYNogroX+MnSB0aqx6urhYHZlFiDizqsbVLEnvSP3M0M3YmhhVrH9RBYQT3WL9HYBJs5eMbqe9HEjzFGW5QrKNm+AiIlBp9yGO/joAmu4cVDw3SWnjlzg99kO4JnnoMDuK4gUry89aFIakij7RI9JuPNhM14e9n99ed9bBm1eELp2x9NqcQdJRZocu81hJk2Nk+xhbExcjhLck8AcuCXKTcmV5d87Kj41qKlCxTSqKL2ERVQJXNQaiIf2ud/m4RcGLEC+tkiH280FUheBeOgqXk7CL+KYSt4cEntsL0VbHyFhcdmEbdlxeeYD6g1bDmWAsXAE+/z56fOr6aXbCBqzyMwj1w3wkYYoOHV9SrWWp0PF+c8B/IhGyaALK/COz1b2Ptt1+DT7A57ykKjpC3B/im3MlVfOUZZC24khkWGM1+NzM7DrOE/1tleCz3b6py8eVmXPBpIa+GA2AHIx2JMGXnrn/nLBDOgixQklno1QQ7ieKizhXwTN3ninKvM+nSMh/AACaEBAb1zIHJbt0zn+plOFYwtVSO7V+hyvZ6ouCvFlQiudXPN88fGee1m48S8cnJBhlbQOSyKoOKfCzIvm7vsr8p3IbfA+NUpxJGfFjnXevq5uxVmcF2sxCXw8gLmqgShqkAfFfC2ey0u4vB/z1ANztpVxSQgDnAKtiEUSEKuU5TBWrgPNqaLylhvcksWlOlK2twyiX+0K2prNXBQUKxmw1U/Ey/94x8trAdjCbgyDp2h5wlAN4+nrERpVEh15SSYZXWkm7xrWr7rL0WtwPUAXkbgvvsYu7UJctgBQ8TWPtQvJh+wr6OkYECWWaIDwZYzg+CWIyjnbw39I4QWfNT/arKVb6o1vvhb97G+p5MKJllLe4r6exbCuENTeyQR6cIxfKZsE7f4sneN9MmHzHMGGsUNueg1VBn+JrDkZ8FwZaaf8opyiZ2Sf+CbjsYIk6pfQo5ylqhD25CjqrrLOsxjdeVvKFXFXye4EcI6sZ4/NG9DGm2VhnoiCxItWICNSDKsC/RTdfBwhJQLj9WwwwAyex+YxDFi5YRaeqVKNpPKMGR5wNbhUqLU6gbAEqQUcrBFFllWuCQAJln3awRDvOuBL4Y5ZfITMmGwr+eG/x7/MD7i8nVGM6ME/eBHedUtzin+JaefELsVvscM8GXz9huFXgzf6dnCzHc4FQR8ATZLegNxYIABrsJYW6mgSn36tg+kOP4vF5aOrPeSdApQMgIEDucPAKTaJ+kRVJk97JAvuqDfRl4IA/eF0c0dcfXvBhmZcFVnKd+00a0qaA1v5qCBXMLGXpwpfEAwh/9irMYx0bAZRn+4ICCMD1cRDS8A5VUJ4iDwcAONwdApuX0mtuz2QG/RXf/T+pWALybCzdLgAAAABJRU5ErkJggg==">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
@@ -311,6 +315,15 @@ button,.lvl,.chip{touch-action:manipulation}
 @keyframes pp{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-60px);opacity:0}}
 .wrap.shake{animation:sh .35s steps(6)}
 @keyframes sh{0%,100%{transform:translate(0,0)}20%{transform:translate(-6px,3px)}40%{transform:translate(5px,-4px)}60%{transform:translate(-4px,-2px)}80%{transform:translate(3px,3px)}}
+.btn.li{background:#0a66c2;border-color:#0a66c2;color:#fff;text-decoration:none;display:inline-block}
+#proom{width:100%;font-family:var(--px);font-size:14px;padding:12px;background:#08081a;color:var(--commit);border:3px solid var(--line);text-transform:uppercase}
+#proom:focus{outline:none;border-color:var(--commit)}
+.roombox{border-color:var(--commit);padding:14px}
+.roombox:has(#roomBox[hidden]){display:none}
+.roomin{display:flex;flex-direction:column;gap:8px}
+.roomin label{font-family:var(--px);font-size:10px;color:var(--commit)}
+#roomLate{flex:1;min-width:140px;font-family:var(--px);font-size:13px;padding:10px;background:#08081a;color:var(--commit);border:3px solid var(--line);text-transform:uppercase}
+#roomMsg{color:var(--head)}
 .btn.snd.off{color:var(--mut);border-color:var(--mut);text-decoration:line-through}
 .sndrow{justify-content:center;margin-top:4px}
 #winStars .st{display:inline-block;color:#3a3a5c}
@@ -354,6 +367,28 @@ button,.lvl,.chip{touch-action:manipulation}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
+
+/* reviews */
+.revcta{flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;border-color:var(--commit)}
+.revcta h3{font-family:var(--px);font-size:11px;color:var(--commit);font-weight:400;margin:0 0 6px}
+.revcta p{margin:0}
+.revbox{max-width:540px;width:100%;margin:auto;z-index:41}
+.revbox h2{font-family:var(--px);font-size:14px;font-weight:400;color:var(--blob);margin:0}
+#revForm{display:flex;flex-direction:column;gap:12px}
+.rate{border:3px solid var(--line);margin:0;padding:8px 12px 10px;min-width:0}
+.rate legend{font-family:var(--px);font-size:9px;color:var(--commit);padding:0 6px;line-height:1.6}
+.stars{display:flex;align-items:center;flex-wrap:wrap;gap:2px}
+.star{font-size:36px;line-height:1;background:none;border:none;color:#3a3a5c;padding:4px 5px;cursor:pointer;font-family:var(--vt)}
+.star.on{color:var(--commit);text-shadow:3px 3px 0 #000}
+.star:focus-visible{outline:3px solid var(--tree);outline-offset:-2px}
+.stars .cap{font-family:var(--vt);font-size:22px;color:var(--mut);margin-left:8px}
+.revlbl{font-family:var(--px);font-size:9px;color:var(--commit)}
+#revText{width:100%;box-sizing:border-box;background:#08081a;border:3px solid var(--line);color:var(--fg);font-family:var(--vt);font-size:21px;padding:8px 10px;resize:vertical}
+#revText:focus{outline:none;border-color:var(--blob)}
+.revcount{align-self:flex-end;margin-top:-8px}
+#revMsg{margin:0;min-height:1.2em;color:var(--tree)}
+#revMsg.err{color:var(--head)}
+@media (max-width:520px){.star{font-size:30px;padding:3px 3px}.stars .cap{font-size:20px;margin-left:4px}.revcta{flex-direction:column;align-items:stretch}}
 </style>
 </head>
 <body>
@@ -371,7 +406,6 @@ button,.lvl,.chip{touch-action:manipulation}
     <button class="btn small snd tgSfx" type="button" aria-pressed="true">SOM ON</button>
     <button class="btn small snd tgMusic" type="button" aria-pressed="true">MÚSICA ON</button>
     <button class="btn small" id="btnMenu" type="button">MENU</button>
-    <button class="btn small test" id="btnTest" type="button" title="Provisório: resolve todas as fases, emite o certificado e envia ao ranking">TESTE: RESOLVER TUDO</button>
   </header>
 
   <nav class="levels" id="levels" aria-label="Fases"></nav>
@@ -468,18 +502,7 @@ button,.lvl,.chip{touch-action:manipulation}
       <div class="tabpane" id="pane-rank" role="tabpanel" hidden>
         <h3>RANKING DA SALA · MENOR TEMPO</h3>
         <div class="rankbox"><p class="muted">Carregando ranking…</p></div>
-        <p class="muted">Entra no ranking quem derrota o boss com todas as fases resolvidas. Jogou em outro link ou sem login? Mostre o certificado ao palestrante.</p>
-        <section id="admin" class="card admin" hidden>
-          <h3>MODO PALESTRANTE</h3>
-          <p class="muted">Lance o resultado de um certificado. O código "commit" do certificado confirma o nome e o tempo.</p>
-          <form id="adminForm" autocomplete="off">
-            <label for="aName">NOME</label><input id="aName" type="text" maxlength="24" placeholder="Como está no certificado">
-            <label for="aTime">TEMPO</label><input id="aTime" type="text" inputmode="decimal" placeholder="12:34.5">
-            <label for="aCode">CÓDIGO</label><input id="aCode" type="text" maxlength="7" placeholder="a1b2c3d">
-            <button class="btn primary" type="submit">LANÇAR NO RANKING</button>
-          </form>
-          <p id="adminMsg" aria-live="polite"></p>
-        </section>
+        <p class="muted">Entra no ranking quem derrota o boss com todas as fases resolvidas. Seu resultado não apareceu? Mostre o certificado ao palestrante.</p>
       </div>
     </aside>
   </main>
@@ -495,6 +518,8 @@ button,.lvl,.chip{touch-action:manipulation}
       <form id="startForm" novalidate>
         <label for="pname">NOME DO PLAYER</label>
         <input id="pname" type="text" maxlength="24" autocomplete="name" placeholder="Seu nome" required>
+        <label for="proom">CÓDIGO DA SALA <span style="color:var(--mut)">(quem está no minicurso)</span></label>
+        <input id="proom" type="text" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Opcional: dito pelo palestrante">
         <p id="nameErr" aria-live="polite"></p>
         <p id="newConfirm" hidden>Já existe um jogo em andamento neste navegador. Clique de novo em PRESS START para começar outro do zero.</p>
         <button class="btn primary press" type="submit">&gt; PRESS START &lt;</button>
@@ -502,7 +527,7 @@ button,.lvl,.chip{touch-action:manipulation}
       </form>
       <div id="continueBox" class="row" hidden style="flex-direction:column;align-items:center;width:100%">
         <p class="muted" id="continueInfo"></p>
-        <button class="btn" id="btnContinue" type="button">CONTINUAR JOGO</button>
+        <span class="row" style="justify-content:center"><button class="btn" id="btnContinue" type="button">CONTINUAR JOGO</button><button class="btn" id="btnReview2" type="button">AVALIAR</button></span>
       </div>
     </section>
     <div class="col">
@@ -555,9 +580,20 @@ button,.lvl,.chip{touch-action:manipulation}
     <canvas id="certCanvas" aria-hidden="true"></canvas>
     <div class="row">
       <button class="btn primary" id="btnDownload" type="button" hidden>BAIXAR PNG</button>
+      <a class="btn li" id="btnLinkedin" href="https://www.linkedin.com/" target="_blank" rel="noopener">ADICIONAR AO LINKEDIN</a>
       <button class="btn" id="btnCloseCert" type="button">VOLTAR AO JOGO</button>
       <button class="btn" id="btnNewRun" type="button">NOVO PLAYER</button>
     </div>
+    <form id="roomForm" class="card roombox" autocomplete="off"><span id="roomBox" class="roomin">
+      <label for="roomLate">ESTEVE NO MINICURSO?</label>
+      <span class="muted">Digite o código da sala para trocar este certificado pelo de participação (2 horas).</span>
+      <span class="row"><input id="roomLate" type="text" maxlength="20" autocapitalize="characters" spellcheck="false" placeholder="código da sala"><button class="btn primary" type="submit">LIBERAR</button></span>
+      <span id="roomMsg" aria-live="polite"></span></span></form>
+    <section class="card revcta">
+      <div><h3>AVALIE O GIT ARCADE</h3><p class="muted" id="revCtaTxt"></p></div>
+      <button class="btn primary" id="btnReview" type="button">AVALIAR</button>
+    </section>
+    <p class="muted">Código da credencial: <b id="certCode" style="color:var(--blob);font-weight:400;user-select:all"></b></p>
     <p id="certTip" class="muted"></p>
     <p id="certMsg" aria-live="polite"></p>
     <section class="card">
@@ -566,9 +602,30 @@ button,.lvl,.chip{touch-action:manipulation}
     </section>
   </div>
 </div>
+<div class="overlay" id="review" hidden>
+  <div class="card revbox" role="dialog" aria-modal="true" aria-labelledby="revTitle">
+    <h2 id="revTitle">AVALIAÇÃO</h2>
+    <p class="muted" id="revWho"></p>
+    <form id="revForm" autocomplete="off" novalidate>
+      <fieldset class="rate"><legend>O JOGO · GIT ARCADE</legend><div class="stars" data-k="game" role="radiogroup" aria-label="Nota para o jogo"></div></fieldset>
+      <fieldset class="rate" id="rateCourse"><legend>O MINICURSO · ENTENDENDO GIT</legend><div class="stars" data-k="course" role="radiogroup" aria-label="Nota para o minicurso"></div></fieldset>
+      <div class="roombox roomin" id="revRoom">
+        <label for="revCode">ESTEVE NO MINICURSO?</label>
+        <span class="muted">Digite o código da sala para avaliar o minicurso também.</span>
+        <span class="row"><input id="revCode" type="text" maxlength="20" autocapitalize="characters" spellcheck="false" placeholder="código da sala"><button class="btn" id="revCodeBtn" type="button">LIBERAR</button></span>
+      </div>
+      <label for="revText" class="revlbl">COMENTÁRIO <span class="muted">(opcional)</span></label>
+      <textarea id="revText" maxlength="280" rows="3" placeholder="O que você mais curtiu? O que dá para melhorar?"></textarea>
+      <span class="muted revcount" id="revCount">0/280</span>
+      <p id="revMsg" aria-live="polite"></p>
+      <div class="row"><button class="btn primary" id="revSend" type="submit">ENVIAR</button><button class="btn" id="revClose" type="button">FECHAR</button></div>
+    </form>
+  </div>
+</div>
 
 <script type="module">
 // Shared ranking for the GitHub Pages version (Firebase Firestore). On claude.ai the import is blocked and the game falls back.
+// Every player signs in anonymously, so the Firestore rules can tie each write to its owner (uid).
 const firebaseConfig = {
   apiKey: "AIzaSyC5xZzAyNHjYoTpwUKADbu0GM9kZSfDHkA",
   authDomain: "gitarcade-f22cb.firebaseapp.com",
@@ -578,16 +635,38 @@ const firebaseConfig = {
   appId: "1:154626906750:web:d53fb8b72d61d8a1f6162f"
 };
 try {
-  const [{ initializeApp }, fs] = await Promise.all([
-    import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
-    import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+  const V = 'https://www.gstatic.com/firebasejs/10.12.2/';
+  const [{ initializeApp }, fs, au] = await Promise.all([
+    import(V + 'firebase-app.js'), import(V + 'firebase-firestore.js'), import(V + 'firebase-auth.js')
   ]);
-  const db = fs.getFirestore(initializeApp(firebaseConfig));
+  const app = initializeApp(firebaseConfig);
+  const db = fs.getFirestore(app), auth = au.getAuth(app);
+  await auth.authStateReady();
+  if (!auth.currentUser) await au.signInAnonymously(auth);
+  const uid = auth.currentUser.uid;
   const col = fs.collection(db, 'ranking');
+  const known = new Set();
   window.FBRANK = {
-    add: e => fs.addDoc(col, e),
+    // one entry per run (doc id = uid_run): several students can share a lab PC
+    add: async e => {
+      if (!e.run) throw new Error('run');
+      const ref = fs.doc(col, uid + '_' + e.run);
+      if ((await fs.getDoc(ref)).exists()) return;
+      await fs.setDoc(ref, {...e, uid});
+    },
+    saveReview: r => fs.setDoc(fs.doc(db, 'reviews', uid + '_' + r.run), {...r, uid, at: fs.serverTimestamp()}),
     subscribe: (cb, err) => fs.onSnapshot(fs.query(col, fs.orderBy('ms', 'asc'), fs.limit(10)), s => cb(s.docs.map(d => d.data())), err),
-    savePlayer: (id, d) => fs.setDoc(fs.doc(db, 'players', id), d, { merge: true })
+    savePlayer: async (id, d) => {
+      const ref = fs.doc(db, 'players', id);
+      const data = {...d, uid, lastSeen: fs.serverTimestamp()};
+      if (!known.has(id)){
+        let snap;
+        try { snap = await fs.getDoc(ref); } catch (e) { const x = new Error('foreign'); x.code = 'foreign'; throw x; }
+        if (!snap.exists()){ await fs.setDoc(ref, {...data, t0: fs.serverTimestamp()}); known.add(id); return; }
+        known.add(id);
+      }
+      return fs.setDoc(ref, data, { merge: true });
+    }
   };
   window.dispatchEvent(new Event('fbrank-ready'));
 } catch (e) {
@@ -1517,7 +1596,7 @@ const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-mo
 const HINTS_TOTAL = 3;
 const RUN_KEY = 'gitarcade-run-v2';
 
-let lastGoals = null, seenBoss = false;
+let lastGoals = null, prevLevel = -1;
 let cur = 0, G, CTX, cmdCount = 0, done = false, selected = null, hist = [], hpos = 0;
 let RUN = null;            // {name, startedAt, cleared:{id:{pts,st,cmds}}, hintsLeft, hintsUsed:{id:true}, finishedMs, submitted}
 let DB = null, rankRows = null, timerId = null;
@@ -1552,8 +1631,9 @@ function openStart(){
   $('#start').hidden = false;
   setTimeout(() => $('#pname').focus(), 50);
 }
-function beginRun(name){
-  RUN = {id: newId(), name, startedAt: Date.now(), cleared: {}, hintsLeft: HINTS_TOTAL, hintsUsed: {}, finishedMs: null, submitted: false, tele: newTele()};
+function beginRun(name, roomKey){
+  RUN = {id: newId(), name, roomKey: roomKey || '', startedAt: Date.now(), cleared: {}, hintsLeft: HINTS_TOTAL, hintsUsed: {}, finishedMs: null, submitted: false, tele: newTele()};
+  prevLevel = -1;
   saveRun(); $('#start').hidden = true; FX.unlock(); FX.play('coin'); afterRunLoaded(0); teleFlush(true);
 }
 function continueRun(){
@@ -1585,7 +1665,7 @@ function loadLevel(i){
   requestAnimationFrame(() => requestAnimationFrame(() => $('#graph').classList.remove('instant')));
   showTab('missao');
   if (!isTouch()) $('#cmd').focus({preventScroll:true});
-  if (RUN && RUN.name){ const boss = L.id === 'BOSS'; FX.levelStart(boss, seenBoss); if (boss) seenBoss = true; } else FX.bossHide();
+  if (RUN && RUN.name){ const boss = L.id === 'BOSS'; FX.levelStart(boss, boss && prevLevel === i); prevLevel = i; } else FX.bossHide();
 }
 function stars(n, par){ return n <= par ? 3 : n <= par + 2 ? 2 : 1; }
 function points(n, par){ return Math.max(200, 1000 - 150 * Math.max(0, n - par)); }
@@ -1765,7 +1845,7 @@ function renderGraph(flash){
 }
 
 // ---------- inspector
-function escapeHtml(s){ return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function renderInspector(){
   const c = selected && G.objects.has(selected) ? selected : G.headCommit();
   const box = $('#insp');
@@ -1919,16 +1999,22 @@ function bench(){
 // ---------- ranking
 // Shared and live on the claude.ai link (signed-in viewers, db capability); anywhere else
 // (GitHub Pages, signed-out) it falls back to a list kept on this device. The presenter can
-// add times from certificates by opening the page with #palestrante.
+// add missing results from certificates in admin.html.
 const LOCAL_RANK = 'gitarcade-local-rank';
 let rankMode = 'loading';
-function cleanName(s){ return String(s || '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, 24); }
-function certCode(name, ms){ return sha1(cleanName(name).toLowerCase() + '|' + Math.floor(ms / 100) + '|arcade-unisanta').slice(0, 7); }
-function parseTime(s){
-  const m = String(s || '').trim().match(/^(?:(\d+):)?(\d{1,2}):(\d{2})(?:[.,](\d))?$/);
-  if (!m || +m[3] > 59) return null;
-  return (((+(m[1] || 0)) * 3600 + (+m[2]) * 60 + (+m[3])) * 10 + (+(m[4] || 0))) * 100;
+function cleanName(s){
+  return String(s || '').normalize('NFC').replace(/[^0-9A-Za-z\u00C0-\u00FF ._'-]/g, '').replace(/\s+/g, ' ').trim().replace(/^[ ._'-]+/, '').slice(0, 24).trim();
 }
+// names show up on the projector: block the obvious ones (accents and leetspeak folded)
+const BAD_PART = ['porra','caralh','buceta','arromb','viad','merda','foder','fodid','fodas','bosta','cacete','vagabund','otari','piroca','xoxota','xereca','punhet','desgrac','retardad','vadia','putaria','cuzao','hitler'];
+const BAD_WORD = ['cu','puta','puto','fdp','pqp','vsf','tnc','krl','bct','foda','corno','nazi','pau','rola','macaco'];
+function badName(s){
+  const t = String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[0134578@$]/g, c => ({0:'o',1:'i',3:'e',4:'a',5:'s',7:'t',8:'b','@':'a','$':'s'}[c]));
+  const glued = t.replace(/[^a-z]/g, '');
+  return BAD_PART.some(w => glued.includes(w)) || t.split(/[^a-z]+/).some(w => BAD_WORD.includes(w));
+}
+function certCode(name, ms){ return sha1(cleanName(name).toLowerCase() + '|' + Math.floor(ms / 100) + '|arcade-unisanta').slice(0, 7); }
 function localRows(){
   const rows = store.get(LOCAL_RANK, []);
   return (Array.isArray(rows) ? rows : []).filter(r => r && typeof r.ms === 'number').sort((x, y) => x.ms - y.ms).slice(0, 10);
@@ -1943,7 +2029,7 @@ function renderRank(){
     rankRows.forEach((r, i) => {
       const li = el('li', RUN && RUN.submitted && r.name === cleanName(RUN.name) && r.ms === RUN.finishedMs ? 'me' : '');
       li.appendChild(el('span', 'rpos', String(i + 1).padStart(2, '0')));
-      li.appendChild(el('span', 'rname', cleanName(r.name) || '???'));
+      li.appendChild(el('span', 'rname', badName(r.name) ? '(nome removido)' : (cleanName(r.name) || '???')));
       li.appendChild(el('span', 'rtime', fmtTime(Number(r.ms) || 0)));
       ol.appendChild(li);
     });
@@ -1968,6 +2054,7 @@ async function initDb(tries){
   if (window.claude && typeof window.claude.use === 'function'){
     let db = null;
     try { db = await window.claude.use('db'); } catch { db = null; }
+    if (db) REVIEW_DB = ({roomKey, ...r}) => db.collection('reviews').add({...r, at: new Date().toISOString()});
     if (db) return useShared({
       add: e => db.collection('ranking').add(e),
       subscribe: (cb, err) => db.collection('ranking').orderBy('ms', 'asc').limit(10).onSnapshot(s => cb(s.docs.map(d => d.data() || {})), err)
@@ -1987,28 +2074,34 @@ function addEntry(entry){
 function submitScore(){
   if (rankMode === 'loading' || !RUN || RUN.submitted || RUN.finishedMs == null || !RUN.name) return;
   RUN.submitted = true; saveRun();
-  addEntry({name: cleanName(RUN.name), ms: RUN.finishedMs, score: totalScore(), at: new Date().toISOString()})
+  const entry = {name: cleanName(RUN.name), ms: Math.round(RUN.finishedMs), score: totalScore(), at: new Date().toISOString()};
+  if (DB === window.FBRANK) entry.run = RUN.id;
+  (DB === window.FBRANK ? teleFlush(true) : Promise.resolve())
+    .then(() => addEntry(entry))
     .then(() => renderRank())
     .catch(() => { RUN.submitted = false; saveRun(); });
 }
-function addManual(e){
-  e.preventDefault();
-  const msg = $('#adminMsg'), name = cleanName($('#aName').value), ms = parseTime($('#aTime').value), code = $('#aCode').value.trim().toLowerCase();
-  if (name.length < 2){ msg.textContent = 'Digite o nome exatamente como está no certificado.'; return; }
-  if (ms == null){ msg.textContent = 'Tempo no formato do certificado, por exemplo 12:34.5'; return; }
-  if (code !== certCode(name, ms)){ msg.textContent = 'O código não confere com esse nome e tempo. Confira letra por letra no certificado.'; return; }
-  if ((rankRows || []).some(r => cleanName(r.name).toLowerCase() === name.toLowerCase() && Math.floor(r.ms / 100) === Math.floor(ms / 100))){ msg.textContent = 'Esse resultado já está no ranking.'; return; }
-  addEntry({name, ms, score: null, at: new Date().toISOString(), manual: true})
-    .then(() => { msg.textContent = `${name} entrou no ranking com ${fmtTime(ms)}.`; $('#adminForm').reset(); $('#aName').focus(); })
-    .catch(() => { msg.textContent = 'Não consegui gravar agora. Tente de novo.'; });
-}
-function syncAdmin(){ $('#admin').hidden = location.hash !== '#palestrante'; if (!$('#admin').hidden) showTab('rank'); }
 
 // ---------- certificate
 function wrapText(ctx, text, maxW){
   const words = text.split(' '), lines = []; let line = '';
   for (const w of words){ const t = line ? line + ' ' + w : w; if (ctx.measureText(t).width > maxW && line){ lines.push(line); line = w; } else line = t; }
   if (line) lines.push(line); return lines;
+}
+const ROOM_HASH = 'ca7070d6dd7582c2e22763c2ff08f21773b13732';
+const normRoom = v => String(v || '').toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
+function roomOk(v){ return !!normRoom(v) && sha1(normRoom(v) + '|arcade-sala') === ROOM_HASH; }
+const isRoom = () => !!(RUN && roomOk(RUN.roomKey));
+const CERT_TITLE = 'Entendendo Git: um guia de versionamento';
+const CERT_ORG = 'Semana de Tecnologia Unisanta';
+// the certificate shows whatever address the game was opened from (works after a domain change)
+const CERT_URL = /^https?:$/.test(location.protocol) && !/claude|localhost|127\.0\.0\.1/.test(location.hostname)
+  ? location.origin + location.pathname.replace(/index\.html$/, '') : 'https://guilhermegongora.github.io/GitArcade/';
+function certDate(){ return new Date(RUN && RUN.startedAt ? RUN.startedAt + (RUN.finishedMs || 0) : Date.now()); }
+function linkedinUrl(){
+  const d = certDate(), room = isRoom(), q = new URLSearchParams({startTask: 'CERTIFICATION_NAME', name: room ? CERT_TITLE : 'Desafio Git Arcade', organizationName: room ? CERT_ORG : 'Git Arcade',
+    issueYear: String(d.getFullYear()), issueMonth: String(d.getMonth() + 1), certUrl: CERT_URL, certId: certCode(RUN.name, RUN.finishedMs)});
+  return 'https://www.linkedin.com/profile/add?' + q.toString();
 }
 async function drawCert(){
   try { await Promise.all([document.fonts.load('40px "Press Start 2P"'), document.fonts.load('40px "VT323"')]); } catch {}
@@ -2018,26 +2111,30 @@ async function drawCert(){
   ctx.fillStyle = '#0b0b1a'; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = 'rgba(255,255,255,0.025)'; for (let y = 0; y < H; y += 6) ctx.fillRect(0, y, W, 2);
   // stepped pixel frame
-  ctx.fillStyle = '#ff2bd6'; [[24, 24, W - 48, 12], [24, H - 36, W - 48, 12], [24, 24, 12, H - 48], [W - 36, 24, 12, H - 48]].forEach(r => ctx.fillRect(...r));
+  const room = isRoom();
+  ctx.fillStyle = room ? '#ff2bd6' : '#39ff14'; [[24, 24, W - 48, 12], [24, H - 36, W - 48, 12], [24, 24, 12, H - 48], [W - 36, 24, 12, H - 48]].forEach(r => ctx.fillRect(...r));
   ctx.fillStyle = '#00e5ff'; [[52, 52, W - 104, 6], [52, H - 58, W - 104, 6], [52, 52, 6, H - 104], [W - 58, 52, 6, H - 104]].forEach(r => ctx.fillRect(...r));
   ctx.fillStyle = '#ffd23f'; [[16, 16], [W - 44, 16], [16, H - 44], [W - 44, H - 44]].forEach(([x, y]) => ctx.fillRect(x, y, 28, 28));
   const logo = $('#logoSrc');
-  if (logo.complete && logo.naturalWidth){ const lw = 200, lh = lw * logo.naturalHeight / logo.naturalWidth; ctx.drawImage(logo, (W - lw) / 2, 70, lw, lh); }
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  if (room){ if (logo.complete && logo.naturalWidth){ const lw = 200, lh = lw * logo.naturalHeight / logo.naturalWidth; ctx.drawImage(logo, (W - lw) / 2, 70, lw, lh); } }
+  else { ctx.font = `60px ${PX}`; ctx.fillStyle = '#ff2bd6'; ctx.fillText('GIT ARCADE', W / 2 + 6, 185 + 6); ctx.fillStyle = '#39ff14'; ctx.fillText('GIT ARCADE', W / 2, 185); }
   ctx.fillStyle = '#ffd23f'; ctx.font = `44px ${PX}`; ctx.fillText('CERTIFICADO', W / 2, 305);
-  ctx.fillStyle = '#ff2bd6'; ctx.font = `18px ${PX}`; ctx.fillText('DE PARTICIPAÇÃO · LEMBRANÇA', W / 2, 345);
-  ctx.fillStyle = '#e8e6d9'; ctx.font = `40px ${VT}`; ctx.fillText('Certificamos, como lembrança, que', W / 2, 410);
+  ctx.fillStyle = '#ff2bd6'; ctx.font = `18px ${PX}`; ctx.fillText(room ? 'DE PARTICIPAÇÃO' : 'DE CONCLUSÃO DO DESAFIO', W / 2, 345);
+  ctx.fillStyle = '#e8e6d9'; ctx.font = `40px ${VT}`; ctx.fillText('Certificamos que', W / 2, 410);
   let fs = 48; ctx.font = `${fs}px ${PX}`;
   const name = RUN.name.toUpperCase();
   while (ctx.measureText(name).width > 1300 && fs > 20){ fs -= 2; ctx.font = `${fs}px ${PX}`; }
   ctx.fillStyle = '#ff2bd6'; ctx.fillText(name, W / 2 + 5, 490 + 5);
   ctx.fillStyle = '#39ff14'; ctx.fillText(name, W / 2, 490);
   ctx.fillStyle = '#e8e6d9'; ctx.font = `38px ${VT}`;
-  const body = 'participou da Semana de Tecnologia da Unisanta, na palestra "Entendendo Git: um guia de versionamento", com carga horária de 2 horas, resolveu os 9 desafios do Git Arcade e derrotou o BOSS do conflito de merge.';
+  const body = room ? 'participou do minicurso "Entendendo Git: um guia de versionamento", ministrado por Guilherme Gongora na Semana de Tecnologia da Unisanta, com carga horária de 2 horas, incluindo a prática Git Arcade, na qual concluiu os 9 desafios e derrotou o boss do conflito de merge.'
+    : 'concluiu o desafio Git Arcade, prática do minicurso "Entendendo Git: um guia de versionamento", resolvendo os 9 desafios de versionamento com Git e derrotando o boss do conflito de merge.';
   const bl = wrapText(ctx, body, 1180); bl.forEach((l, i) => ctx.fillText(l, W / 2, 560 + i * 44));
   const statY = Math.max(760, 560 + (bl.length - 1) * 44 + 40);
   // stat boxes
-  const stats = [['TEMPO', fmtTime(RUN.finishedMs)], ['SCORE', String(totalScore()).padStart(6, '0')], ['DATA', new Date().toLocaleDateString('pt-BR')]];
+  const stats = room ? [['CARGA HORÁRIA', '2 HORAS'], ['DATA', certDate().toLocaleDateString('pt-BR')], ['TEMPO NO DESAFIO', fmtTime(RUN.finishedMs)]]
+    : [['TEMPO', fmtTime(RUN.finishedMs)], ['SCORE', String(totalScore()).padStart(6, '0')], ['DATA', certDate().toLocaleDateString('pt-BR')]];
   stats.forEach(([k, v], i) => {
     const bw = 340, gap = 40, x = (W - (bw * 3 + gap * 2)) / 2 + i * (bw + gap), y = statY;
     ctx.fillStyle = '#12122b'; ctx.fillRect(x, y, bw, 110);
@@ -2051,11 +2148,11 @@ async function drawCert(){
   if (sig && sig.complete && sig.naturalWidth){ const sw = 360, sh = sw * sig.naturalHeight / sig.naturalWidth; ctx.drawImage(sig, 1240 - sw / 2, sy - sh + 10, sw, sh); }
   ctx.fillStyle = '#e8e6d9'; ctx.fillRect(1050, sy, 380, 3);
   ctx.font = `36px ${VT}`; ctx.fillText('Guilherme Gongora', 1240, sy + 40);
-  ctx.fillStyle = '#9a9ab8'; ctx.font = `28px ${VT}`; ctx.fillText('palestrante', 1240, sy + 70);
+  ctx.fillStyle = '#9a9ab8'; ctx.font = `28px ${VT}`; ctx.fillText(room ? 'Palestrante' : 'Criador do Git Arcade', 1240, sy + 70);
   ctx.textAlign = 'left';
-  ctx.fillStyle = '#39ff14'; ctx.font = `30px ${VT}`; ctx.fillText('commit ' + certCode(RUN.name, RUN.finishedMs), 140, sy + 10);
+  ctx.fillStyle = '#39ff14'; ctx.font = `30px ${VT}`; ctx.fillText('Código de verificação: ' + certCode(RUN.name, RUN.finishedMs), 140, sy + 10);
   ctx.fillStyle = '#9a9ab8'; ctx.font = `26px ${VT}`;
-  wrapText(ctx, 'Lembrança simbólica, sem valor de certificação oficial.', 820).forEach((l, i) => ctx.fillText(l, 140, sy + 46 + i * 30));
+  wrapText(ctx, 'guilhermegongora.github.io/GitArcade', 820).forEach((l, i) => ctx.fillText(l, 140, sy + 46 + i * 30));
   const url = cv.toDataURL('image/png');
   $('#certImg').src = url;
 }
@@ -2064,29 +2161,35 @@ async function openCert(){
   await drawCert();
   renderRank();
   let dl = null; try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch { dl = null; }
-  $('#btnDownload').hidden = !dl;
-  $('#certTip').textContent = dl ? 'Ou clique com o botão direito na imagem e escolha "Salvar imagem como".' : 'Clique com o botão direito na imagem e escolha "Salvar imagem como" (no celular, toque e segure).';
-  $('#btnDownload').onclick = () => {
+  const slug = RUN.name.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'player';
+  const inClaude = /claude\.ai|claudeusercontent/.test(location.hostname) || !!dl;
+  $('#btnDownload').hidden = false;
+  $('#btnLinkedin').href = linkedinUrl();
+  $('#roomBox').hidden = isRoom();
+  $('#revCtaTxt').textContent = isRoom() ? 'Leva 20 segundos: dê nota para o jogo e para o minicurso.' : 'Leva 20 segundos: dê nota para o jogo.';
+  $('#certCode').textContent = certCode(RUN.name, RUN.finishedMs);
+  $('#certTip').textContent = 'Para postar: baixe o PNG e use ADICIONAR AO LINKEDIN, que já preenche nome do curso, emissor, data e código. No celular, se o download não abrir, toque e segure a imagem.';
+  if (!dl) $('#btnDownload').onclick = () => {
+    const a = document.createElement('a'); a.href = $('#certCanvas').toDataURL('image/png'); a.download = `certificado-entendendo-git-${slug}.png`;
+    document.body.appendChild(a); a.click(); a.remove(); $('#certMsg').textContent = inClaude ? 'Se nada baixou, use o botão direito na imagem.' : 'Certificado baixado.';
+  };
+  else $('#btnDownload').onclick = () => {
     $('#certCanvas').toBlob(blob => {
       if (!blob) return;
-      const slug = RUN.name.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'player';
-      dl.save({filename: `certificado-git-arcade-${slug}.png`, data: blob})
+      dl.save({filename: `certificado-entendendo-git-${slug}.png`, data: blob})
         .then(() => { $('#certMsg').textContent = 'Certificado salvo.'; })
         .catch(e => { $('#certMsg').textContent = e && e.code === 'declined' ? 'Download cancelado.' : 'Não deu para baixar aqui. Use o botão direito na imagem.'; });
     }, 'image/png');
   };
   $('#btnCloseCert').focus();
 }
-
-
-// ---------- PROVISÓRIO: atalho de teste (remover antes da palestra)
-function solveAllForTest(){
-  if (!RUN || !RUN.name){ openStart(); $('#nameErr').textContent = 'Digite um nome e aperte PRESS START antes de usar o teste.'; return; }
-  LEVELS.forEach(L => { if (!RUN.cleared[L.id]) RUN.cleared[L.id] = {pts: 1000, st: 3, cmds: L.par}; });
-  if (RUN.finishedMs == null) RUN.finishedMs = Date.now() - RUN.startedAt;
-  RUN.test = true;
-  saveRun(); tick(); renderLevels(); renderHud(); submitScore(); teleFlush(true); FX.finalWin(); openCert();
+function unlockRoom(e){
+  e.preventDefault();
+  if (!roomOk($('#roomLate').value)){ $('#roomMsg').textContent = 'Código não confere. Confira com o palestrante.'; FX.play('err'); return; }
+  RUN.roomKey = normRoom($('#roomLate').value); saveRun(); teleFlush(true); $('#roomMsg').textContent = ''; FX.play('coin'); openCert();
 }
+
+
 
 
 // ---------- telemetry for the presenter dashboard (admin.html). Only runs where Firebase is reachable.
@@ -2105,20 +2208,37 @@ function teleCmd(line, isErr){
   if (isErr){ T.errs[k] = (T.errs[k] || 0) + 1; T.errTotal++; }
   saveRun(); teleFlush(false);
 }
-let teleTimer = null;
+let teleTimer = null, teleLast = 0, teleWait = null;
+// Writes to Firestore are spaced at least TELE_GAP apart (the rules reject faster updates);
+// the only exception is the single "left" write when the tab is hidden.
+const TELE_GAP = 6000;
 function teleFlush(now){
-  if (!window.FBRANK || !window.FBRANK.savePlayer || !RUN || !RUN.id || !RUN.name) return;
-  if (!now){ if (!teleTimer) teleTimer = setTimeout(() => { teleTimer = null; teleFlush(true); }, 6000); return; }
-  clearTimeout(teleTimer); teleTimer = null;
+  if (!window.FBRANK || !window.FBRANK.savePlayer || !RUN || !RUN.id || !RUN.name) return Promise.resolve();
+  if (!now){ if (!teleTimer) teleTimer = setTimeout(() => { teleTimer = null; teleFlush(true); }, TELE_GAP); return Promise.resolve(); }
+  const gap = teleLast + TELE_GAP - Date.now();
+  if (gap > 0 && document.visibilityState !== 'hidden'){
+    if (!teleWait) teleWait = new Promise(res => setTimeout(() => { teleWait = null; teleFlush(true).then(res, res); }, gap));
+    return teleWait;
+  }
+  return teleSend();
+}
+function teleSend(){
+  if (!window.FBRANK || !RUN || !RUN.id || !RUN.name) return Promise.resolve();
+  clearTimeout(teleTimer); teleTimer = null; teleLast = Date.now();
   const T = RUN.tele || newTele();
   const data = {
-    name: cleanName(RUN.name), startedAt: RUN.startedAt, lastSeen: Date.now(), level: LEVELS[cur] ? LEVELS[cur].id : '1-1',
-    cleared: Object.keys(RUN.cleared).length, finishedMs: RUN.finishedMs == null ? null : RUN.finishedMs, score: totalScore(),
+    name: cleanName(RUN.name), startedAt: Math.round(RUN.startedAt), level: LEVELS[cur] ? LEVELS[cur].id : '1-1',
+    cleared: Object.keys(RUN.cleared).length, finishedMs: RUN.finishedMs == null ? null : Math.round(RUN.finishedMs), score: totalScore(),
     hintsUsed: HINTS_TOTAL - RUN.hintsLeft, cmdTotal: T.total, errTotal: T.errTotal, cmds: T.cmds, errs: T.errs,
-    device: window.matchMedia && window.matchMedia('(pointer: coarse)').matches ? 'mobile' : 'desktop', test: !!RUN.test,
+    device: window.matchMedia && window.matchMedia('(pointer: coarse)').matches ? 'mobile' : 'desktop', test: !!RUN.test, room: isRoom(),
     left: document.visibilityState === 'hidden'
   };
-  try { window.FBRANK.savePlayer(RUN.id, data).catch(() => {}); } catch {}
+  let p;
+  try { p = window.FBRANK.savePlayer(RUN.id, data); } catch (e) { p = Promise.reject(e); }
+  return Promise.resolve(p).catch(e => {
+    // record belongs to another session (e.g. an old run saved before an update): start a fresh record
+    if (e && e.code === 'foreign'){ RUN.id = newId(); saveRun(); }
+  });
 }
 // presence: heartbeat while the tab is visible; mark 'left' when it is hidden or closed
 setInterval(() => { if (RUN && RUN.finishedMs == null && document.visibilityState === 'visible') teleFlush(true); }, 45000);
@@ -2126,6 +2246,94 @@ document.addEventListener('visibilitychange', () => teleFlush(true));
 window.addEventListener('pagehide', () => teleFlush(true));
 window.addEventListener('fbrank-ready', () => teleFlush(true));
 
+
+// ---------- reviews: everyone rates the game; minicurso only with the room code
+let REVIEW_DB = null;
+const REV_KEY = 'gitarcade-reviews';           // {runId: {game, course, comment, sentAt}}
+const REV_WORDS = ['', 'Ruim', 'Fraco', 'Ok', 'Bom', 'Excelente'];
+const rev = {game: 0, course: 0};
+function revRun(){ return RUN && RUN.name ? RUN : store.get(RUN_KEY, null); }
+function revSaved(r){ const m = store.get(REV_KEY, {}); return r && m && typeof m === 'object' ? m[r.id] || null : null; }
+function renderRev(){
+  const r = revRun(), room = !!(r && roomOk(r.roomKey));
+  $('#rateCourse').hidden = !room; $('#revRoom').hidden = room;
+  document.querySelectorAll('#review .stars').forEach(box => {
+    const k = box.dataset.k;
+    box.querySelectorAll('.star').forEach((b, i) => { const on = i < rev[k]; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(i + 1 === rev[k])); b.tabIndex = (rev[k] ? i + 1 === rev[k] : i === 0) ? 0 : -1; });
+    box.querySelector('.cap').textContent = REV_WORDS[rev[k]] || 'toque nas estrelas';
+  });
+  $('#revCount').textContent = $('#revText').value.length + '/280';
+}
+function openReview(){
+  const r = revRun(); if (!r || !r.name) return;
+  if (!r.id){ r.id = newId(); if (r === RUN) saveRun(); else store.set(RUN_KEY, r); }
+  const s = revSaved(r);
+  rev.game = s ? s.game : 0; rev.course = s && s.course ? s.course : 0;
+  $('#revText').value = s ? s.comment || '' : '';
+  $('#revWho').textContent = `${cleanName(r.name)} · ${roomOk(r.roomKey) ? 'participante do minicurso' : 'jogador'}`;
+  const msg = $('#revMsg'); msg.className = ''; msg.textContent = s ? 'Você já avaliou. Pode mudar e enviar de novo.' : '';
+  $('#revSend').textContent = s ? 'ENVIAR DE NOVO' : 'ENVIAR';
+  renderRev(); $('#review').hidden = false;
+  const first = $('#review .star[tabindex="0"]'); if (first) first.focus({preventScroll: true});
+}
+function closeReview(){ $('#review').hidden = true; }
+function setupReview(){
+  document.querySelectorAll('#review .stars').forEach(box => {
+    const k = box.dataset.k;
+    for (let i = 1; i <= 5; i++){
+      const b = el('button', 'star', '★'); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-label', `${i} de 5: ${REV_WORDS[i]}`);
+      b.addEventListener('click', () => { rev[k] = i; FX.play('key'); renderRev(); b.focus(); });
+      b.addEventListener('keydown', e => {
+        const d = e.key === 'ArrowRight' || e.key === 'ArrowUp' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -1 : 0;
+        if (!d) return; e.preventDefault(); rev[k] = Math.min(5, Math.max(1, (rev[k] || 0) + d)); renderRev(); box.querySelectorAll('.star')[rev[k] - 1].focus();
+      });
+      box.appendChild(b);
+    }
+    box.appendChild(el('span', 'cap', ''));
+  });
+  $('#revText').addEventListener('input', renderRev);
+  $('#btnReview').addEventListener('click', openReview);
+  $('#btnReview2').addEventListener('click', openReview);
+  $('#revClose').addEventListener('click', closeReview);
+  $('#review').addEventListener('click', e => { if (e.target === $('#review')) closeReview(); });
+  $('#review').addEventListener('keydown', e => { if (e.key === 'Escape') closeReview(); });
+  $('#revCodeBtn').addEventListener('click', () => {
+    const r = revRun(), v = $('#revCode').value, msg = $('#revMsg');
+    if (!roomOk(v)){ msg.className = 'err'; msg.textContent = 'Código da sala não confere.'; FX.play('err'); return; }
+    r.roomKey = normRoom(v);
+    if (r === RUN){ saveRun(); teleFlush(true); } else store.set(RUN_KEY, r);
+    msg.className = ''; msg.textContent = 'Código liberado: agora dá para avaliar o minicurso.'; FX.play('coin');
+    $('#revWho').textContent = `${cleanName(r.name)} · participante do minicurso`;
+    $('#revCode').value = ''; renderRev();
+    if (RUN && !$('#cert').hidden){ drawCert(); $('#btnLinkedin').href = linkedinUrl(); $('#roomBox').hidden = true; $('#revCtaTxt').textContent = 'Leva 20 segundos: dê nota para o jogo e para o minicurso.'; }
+  });
+  $('#revForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const r = revRun(), msg = $('#revMsg'), room = !!(r && roomOk(r.roomKey));
+    const fail = t => { msg.className = 'err'; msg.textContent = t; FX.play('err'); };
+    if (!r || !r.name) return fail('Comece um jogo para poder avaliar.');
+    if (!rev.game) return fail('Dê uma nota para o jogo (toque nas estrelas).');
+    if (room && !rev.course) return fail('Dê uma nota para o minicurso também.');
+    const s = revSaved(r);
+    if (s && Date.now() - s.sentAt < 12000) return fail('Aguarde alguns segundos para enviar de novo.');
+    const comment = $('#revText').value.replace(/[\u0000-\u0008\u000b-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g, '').trim().slice(0, 280);
+    const data = {name: cleanName(r.name), game: rev.game, comment, room, run: r.id};
+    if (room){ data.course = rev.course; data.roomKey = normRoom(r.roomKey); }
+    const fb = window.FBRANK && window.FBRANK.saveReview;
+    // send right away; if the run record is not on the server yet, sync it and try once more
+    const send = fb ? window.FBRANK.saveReview(data).catch(() => (r === RUN ? teleFlush(true) : Promise.resolve()).then(() => window.FBRANK.saveReview(data)))
+      : REVIEW_DB ? REVIEW_DB(data) : Promise.resolve();
+    $('#revSend').disabled = true; msg.className = ''; msg.textContent = 'Enviando…';
+    send.then(() => {
+      const m = store.get(REV_KEY, {}); const map = m && typeof m === 'object' ? m : {};
+      map[r.id] = {game: rev.game, course: room ? rev.course : 0, comment, sentAt: Date.now()}; store.set(REV_KEY, map);
+      msg.textContent = 'Valeu! Sua avaliação foi enviada.'; $('#revSend').textContent = 'ENVIAR DE NOVO';
+      FX.play('star'); FX.confetti('burst');
+      setTimeout(() => { if (msg.textContent.startsWith('Valeu')) closeReview(); }, 2200);
+    }).catch(() => fail('Não consegui enviar. Confira a internet e tente de novo.'))
+      .finally(() => { $('#revSend').disabled = false; });
+  });
+}
 
 // ---------- mobile typing helpers
 const KEYS = [['git ', 'git '], ['status', 'status'], ['add ', 'add '], ['commit', 'commit -m "'], ['"', '"'], ['switch ', 'switch '], ['-c ', '-c '], ['merge ', 'merge '], ['log', 'log'], ['reflog', 'reflog'], ['reset ', 'reset '], ['--soft', '--soft '], ['HEAD~1', 'HEAD~1'], ['echo', 'echo "'], ['" >', '" > '], ['cat ', 'cat '], ['.', '.'], ['↑', '@up'], ['APAGAR', '@clear'], ['ENTER', '@enter']];
@@ -2176,9 +2384,12 @@ function boot(){
     e.preventDefault();
     const name = cleanName($('#pname').value);
     if (name.length < 2){ $('#nameErr').textContent = 'Digite seu nome (é ele que vai no certificado).'; $('#pname').focus(); return; }
+    if (badName(name)){ $('#nameErr').textContent = 'Escolha outro nome: ele vai aparecer no telão.'; $('#pname').focus(); return; }
+    const rv = $('#proom').value, room = roomOk(rv);
+    if (normRoom(rv) && !room){ $('#nameErr').textContent = 'Código da sala não confere. Se você está jogando de casa, deixe em branco.'; $('#proom').focus(); return; }
     const saved = store.get(RUN_KEY, null);
     if (saved && saved.finishedMs == null && $('#newConfirm').hidden){ $('#newConfirm').hidden = false; return; }
-    beginRun(name);
+    beginRun(name, room ? normRoom(rv) : '');
   });
   $('#btnContinue').addEventListener('click', continueRun);
   renderCmds(); showTab('missao');
@@ -2186,10 +2397,9 @@ function boot(){
   if (saved && saved.name && saved.finishedMs != null){ RUN = saved; afterRunLoaded(LEVELS.length - 1); }
   else { RUN = {name: '', startedAt: Date.now(), cleared: {}, hintsLeft: HINTS_TOTAL, hintsUsed: {}, finishedMs: 0, submitted: true}; renderLevels(); loadLevel(0); RUN = null; openStart(); }
   if (saved && saved.name) $('#pname').value = saved.name;
-  $('#adminForm').addEventListener('submit', addManual);
+  $('#roomForm').addEventListener('submit', unlockRoom);
+  setupReview();
   setupKeys();
-  $('#btnTest').addEventListener('click', solveAllForTest);
-  window.addEventListener('hashchange', syncAdmin); syncAdmin();
   window.addEventListener('fbrank-ready', () => { if (rankMode !== 'shared' || DB !== window.FBRANK) useShared(window.FBRANK); });
   initDb();
 }
