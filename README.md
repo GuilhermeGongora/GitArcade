@@ -1,4 +1,4 @@
-# Git Arcade
+# Git Arcadexzxcvxcvxcvx
 
 Jogo de Git no navegador, feito para o minicurso **"Entendendo Git: um guia de versionamento"** na Semana de Tecnologia da Unisanta.
 
