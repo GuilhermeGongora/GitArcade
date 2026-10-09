@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-dsyZwFdVYsDDT1ijeNvuz+GWDT5gtZL5VerbbUpaMx8=' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com; frame-src https://gitarcade-f22cb.firebaseapp.com https://accounts.google.com; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-GpTYGpGMgpRWLiErbEJycKYe2f7NDo+qWniIRXS3zdA=' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com; frame-src 'self' https://gitarcade-f22cb.firebaseapp.com https://accounts.google.com; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Painel Git Arcade</title>
@@ -68,12 +68,20 @@ label.tg input{width:18px;height:18px;accent-color:var(--ok)}
 .chip.test{color:var(--err);border-color:var(--err)}
 .chip.room{color:var(--accent);border-color:var(--accent)}
 .li{display:inline-block;font-family:var(--px);font-size:8px;line-height:1;padding:3px 4px 2px;background:#0a66c2;color:#fff;text-decoration:none;vertical-align:3px}
+.palco{display:flex;flex-direction:column;gap:12px}
+.palcohead{display:flex;gap:16px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.palcohead h2{margin:0 0 6px;font-family:var(--px);font-size:12px;color:var(--accent)}
+.palcohead p{margin:0;max-width:760px}
+.palcobtns{display:flex;gap:10px;flex-wrap:wrap}
+a.btn{text-decoration:none;display:inline-flex;align-items:center}
+#palcoBox iframe{width:100%;height:82vh;border:3px solid var(--line);background:#0b0b1a;display:block}
+.li.gh{background:#24292f;outline:1px solid #8b949e}
 .chip.over{color:#fff;background:var(--err);border-color:var(--err)}
 .prog i.w2{margin-left:4px}
 .manual summary{font-family:var(--px);font-size:9px;color:var(--mut);cursor:pointer;padding:6px 0}
 #manForm{display:flex;flex-direction:column;gap:6px;max-width:420px}
 #manForm label{font-family:var(--px);font-size:8px;color:var(--cy);margin-top:4px}
-#manForm input{font-family:var(--vt);font-size:20px;padding:6px 8px;background:#08081a;color:var(--fg);border:2px solid var(--line)}
+#manForm input,#manForm select{font-family:var(--vt);font-size:20px;padding:6px 8px;background:#08081a;color:var(--fg);border:2px solid var(--line)}
 #manForm .btn{margin-top:8px;align-self:flex-start}
 #manMsg{color:var(--accent);min-height:1.2em}
 .chip.left{color:#ff3b3b;border-color:#ff3b3b}
@@ -135,6 +143,14 @@ td.num,th.num{text-align:right}
     <span class="who" id="who"></span><button class="btn" id="btnLogout" type="button">SAIR</button>
     <p id="msg" style="width:100%"></p>
   </header>
+  <section class="card palco" aria-labelledby="palcoTitle">
+    <div class="palcohead">
+      <div><h2 id="palcoTitle">TERMINAL AO VIVO · MODO PALCO</h2>
+      <p class="muted">Git simulado do jogo, com o grafo de commits e a .git por dentro: repositório vazio, sem cronômetro, sem ranking e sem gravar nada. Plano B se o VS Code ou o terminal falharem. Comando <b>palco</b> zera o repositório.</p></div>
+      <div class="palcobtns"><button class="btn" id="btnPalco" type="button" aria-expanded="false">MOSTRAR AQUI</button><a class="btn" id="lnkPalco" href="./?palco" target="_blank" rel="noopener">ABRIR EM TELA CHEIA</a></div>
+    </div>
+    <div id="palcoBox" hidden></div>
+  </section>
 
   <section class="kpis" aria-label="Resumo">
     <div class="kpi"><small>ENTRARAM</small><b id="kIn">0</b><span id="kInSub">—</span></div>
@@ -154,13 +170,16 @@ td.num,th.num{text-align:right}
     </section>
     <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
       <section class="card">
-        <h2>RANKING · MENOR TEMPO</h2>
+        <h2>RANKING · JOGO COMPLETO</h2>
         <ol class="rank" id="rank"></ol>
+        <h2 style="margin-top:14px">RANKING · MUNDO 1</h2>
+        <ol class="rank" id="rank1"></ol>
         <details class="manual"><summary>LANÇAR RESULTADO DE UM CERTIFICADO</summary>
           <form id="manForm" autocomplete="off">
             <label for="mName">NOME (como no certificado)</label><input id="mName" type="text" maxlength="24">
             <label for="mTime">TEMPO</label><input id="mTime" type="text" inputmode="decimal" placeholder="12:34.5">
-            <label for="mCode">CÓDIGO DE VERIFICAÇÃO</label><input id="mCode" type="text" maxlength="7" placeholder="a1b2c3d">
+            <label for="mCode">CÓDIGO DE VERIFICAÇÃO</label><input id="mCode" type="text" maxlength="10" placeholder="a1b2c3d ou M1-a1b2c3d">
+            <label for="mTier">RANKING</label><select id="mTier"><option value="full">Jogo completo (2 bosses)</option><option value="w1">Mundo 1 (1º boss)</option></select>
             <button class="btn" type="submit">LANÇAR NO RANKING</button>
             <p id="manMsg" aria-live="polite"></p>
           </form>
@@ -232,9 +251,11 @@ const tms = v => v && typeof v.toMillis === 'function' ? v.toMillis() : n(v); //
 if (window.top !== window.self){ document.documentElement.innerHTML = ''; window.top.location = window.self.location.href; }
 document.querySelectorAll('img[src="unisanta.png"]').forEach(i => i.addEventListener('error', () => { i.hidden = true; }));
 
-let players = [], ranking = [], reviews = [], seen = new Set(), firstLoad = true;
+let players = [], ranking = [], ranking1 = [], reviews = [], seen = new Set(), firstLoad = true;
 const liOk = s => typeof s === 'string' && /^[A-Za-z0-9-]{3,100}$/.test(s);
 function liA(s){ if (!liOk(s)) return null; const a = el('a', 'li', 'in'); a.href = 'https://www.linkedin.com/in/' + s + '/'; a.target = '_blank'; a.rel = 'noopener noreferrer nofollow'; a.title = 'linkedin.com/in/' + s; return a; }
+const ghOk = s => typeof s === 'string' && /^[A-Za-z0-9]([A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/.test(s);
+function ghA(s){ if (!ghOk(s)) return null; const a = el('a', 'li gh', 'gh'); a.href = 'https://github.com/' + s; a.target = '_blank'; a.rel = 'noopener noreferrer nofollow'; a.title = 'github.com/' + s; return a; }
 const starTxt = v => '★'.repeat(n(v)) + '☆'.repeat(5 - n(v));
 const avg = a => a.length ? (a.reduce((s, v) => s + v, 0) / a.length) : null;
 function renderReviews(){
@@ -379,7 +400,7 @@ function render(){
     const st = status(p), li = el('li', seen.has(p.id) || firstLoad ? '' : 'new');
     li.style.borderLeftColor = st.k === 'win' ? 'var(--accent)' : st.k === 'play' ? '#39ff14' : st.k === 'over' ? 'var(--err)' : '#5a1a1a';
     li.appendChild(el('span', 't', hhmm(n(p.startedAt))));
-    const nn = el('span', 'n', p.name || '???'); const la = liA(p.li); if (la){ nn.append(' '); nn.appendChild(la); } li.appendChild(nn);
+    const nn = el('span', 'n', p.name || '???'); const la = liA(p.li); if (la){ nn.append(' '); nn.appendChild(la); } const ga = ghA(p.gh); if (ga){ nn.append(' '); nn.appendChild(ga); } li.appendChild(nn);
     const chips = el('span', ''); chips.appendChild(el('span', 'chip ' + st.k, st.t)); if (p.room){ chips.append(' '); chips.appendChild(el('span', 'chip room', 'SALA')); } if (p.test) chips.appendChild(el('span', 'chip test', 'TESTE')); li.appendChild(chips);
     const meta = el('div', 'meta');
     const prog = el('span', 'prog'); prog.setAttribute('aria-label', `${n(p.cleared)} de ${NL} fases`);
@@ -394,10 +415,15 @@ function render(){
 
   // ranking (hide entries that belong to hidden test players)
   const testKeys = new Set(players.filter(p => p.test && p.finishedMs != null).map(p => (p.name || '').toLowerCase() + '|' + Math.floor(p.finishedMs / 100)));
+  const testKeys1 = new Set(players.filter(p => p.test && p.w1Ms != null).map(p => (p.name || '').toLowerCase() + '|' + Math.floor(p.w1Ms / 100)));
   const rk = (($('#hideTests').checked) ? ranking.filter(r => !testKeys.has((r.name || '').toLowerCase() + '|' + Math.floor(n(r.ms) / 100))) : ranking).slice(0, 10);
   const ol = $('#rank'); ol.innerHTML = '';
   if (!rk.length) ol.appendChild(el('li', 'muted', 'Ninguém derrotou o boss ainda.'));
-  rk.forEach((r, i) => { const li = el('li'); li.appendChild(el('span', 'p', String(i + 1).padStart(2, '0'))); const rn = el('span', 'nm', r.name || '???'); const ra = liA(r.li); if (ra){ rn.append(' '); rn.appendChild(ra); } li.appendChild(rn); li.appendChild(el('span', 'tm', fmt(n(r.ms)))); const x = el('button', 'x', 'APAGAR'); x.type = 'button'; x.setAttribute('aria-label', 'Apagar ' + (r.name || '') + ' do ranking'); x.addEventListener('click', () => confirmBtn(x, 'APAGAR', () => DEL && DEL('ranking', r.id).then(() => say(`${r.name} saiu do ranking.`)).catch(() => say('Não consegui apagar. Confira as regras.')))); li.appendChild(x); ol.appendChild(li); });
+  const rk1 = (($('#hideTests').checked) ? ranking1.filter(r => !testKeys1.has((r.name || '').toLowerCase() + '|' + Math.floor(n(r.ms) / 100))) : ranking1).slice(0, 10);
+  const ol1 = $('#rank1'); ol1.innerHTML = '';
+  if (!rk1.length) ol1.appendChild(el('li', 'muted', 'Ninguém venceu o Mundo 1 ainda.'));
+  rk1.forEach((r, i) => { const li = el('li'); li.appendChild(el('span', 'p', String(i + 1).padStart(2, '0'))); const rn = el('span', 'nm', r.name || '???'); const ra = liA(r.li); if (ra){ rn.append(' '); rn.appendChild(ra); } const rg = ghA(r.gh); if (rg){ rn.append(' '); rn.appendChild(rg); } li.appendChild(rn); li.appendChild(el('span', 'tm', fmt(n(r.ms)))); const x = el('button', 'x', 'APAGAR'); x.type = 'button'; x.setAttribute('aria-label', 'Apagar ' + (r.name || '') + ' do ranking do Mundo 1'); x.addEventListener('click', () => confirmBtn(x, 'APAGAR', () => DEL && DEL('ranking1', r.id).then(() => say(`${r.name} saiu do ranking do Mundo 1.`)).catch(() => say('Não consegui apagar. Confira as regras.')))); li.appendChild(x); ol1.appendChild(li); });
+  rk.forEach((r, i) => { const li = el('li'); li.appendChild(el('span', 'p', String(i + 1).padStart(2, '0'))); const rn = el('span', 'nm', r.name || '???'); const ra = liA(r.li); if (ra){ rn.append(' '); rn.appendChild(ra); } const rg = ghA(r.gh); if (rg){ rn.append(' '); rn.appendChild(rg); } li.appendChild(rn); li.appendChild(el('span', 'tm', fmt(n(r.ms)))); const x = el('button', 'x', 'APAGAR'); x.type = 'button'; x.setAttribute('aria-label', 'Apagar ' + (r.name || '') + ' do ranking'); x.addEventListener('click', () => confirmBtn(x, 'APAGAR', () => DEL && DEL('ranking', r.id).then(() => say(`${r.name} saiu do ranking.`)).catch(() => say('Não consegui apagar. Confira as regras.')))); li.appendChild(x); ol.appendChild(li); });
 
   // funnel
   hbar($('#chFunnel'), list.length ? LEVELS.map((id, i) => {
@@ -437,11 +463,17 @@ function render(){
   });
 }
 
+// ---------- live terminal (the game in ?palco mode, same origin)
+$('#btnPalco').addEventListener('click', () => {
+  const box = $('#palcoBox'), open = box.hidden;
+  if (open && !box.firstChild){ const f = document.createElement('iframe'); f.src = './?palco'; f.title = 'Terminal ao vivo'; box.appendChild(f); }
+  box.hidden = !open; $('#btnPalco').textContent = open ? 'ESCONDER' : 'MOSTRAR AQUI'; $('#btnPalco').setAttribute('aria-expanded', String(open));
+});
 // ---------- CSV
 $('#btnCsv').addEventListener('click', () => {
-  const head = ['nome', 'entrou', 'status', 'fase', 'resolvidas', 'comandos', 'erros', 'dicas', 'pulos', 'tempo', 'tempo_ms', 'score', 'aparelho', 'sala', 'segredos', 'teste'];
+  const head = ['nome', 'entrou', 'status', 'fase', 'resolvidas', 'comandos', 'erros', 'dicas', 'pulos', 'tempo', 'tempo_ms', 'score', 'aparelho', 'sala', 'segredos', 'teste', 'linkedin', 'github'];
   const q = v => { let t = String(v ?? ''); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; };
-  const lines = [head.join(';')].concat(players.map(p => [p.name, new Date(n(p.startedAt)).toLocaleString('pt-BR'), status(p).t, p.level, n(p.cleared), n(p.cmdTotal), n(p.errTotal), n(p.hintsUsed), n(p.skipped), fmt(p.finishedMs), p.finishedMs ?? '', n(p.score), p.device, p.room ? 'sim' : 'não', n(p.eggs), p.test ? 'sim' : 'não'].map(q).join(';')));
+  const lines = [head.join(';')].concat(players.map(p => [p.name, new Date(n(p.startedAt)).toLocaleString('pt-BR'), status(p).t, p.level, n(p.cleared), n(p.cmdTotal), n(p.errTotal), n(p.hintsUsed), n(p.skipped), fmt(p.finishedMs), p.finishedMs ?? '', n(p.score), p.device, p.room ? 'sim' : 'não', n(p.eggs), p.test ? 'sim' : 'não', liOk(p.li) ? 'https://www.linkedin.com/in/' + p.li + '/' : '', ghOk(p.gh) ? 'https://github.com/' + p.gh : ''].map(q).join(';')));
   const blob = new Blob(['﻿' + lines.join('\n')], {type: 'text/csv;charset=utf-8'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'git-arcade-jogadores.csv'; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
@@ -475,14 +507,16 @@ try {
   const parseTime = v => { const m = String(v || '').trim().match(/^(?:(\d+):)?(\d{1,2}):(\d{2})(?:[.,](\d))?$/); if (!m || +m[3] > 59) return null; return (((+(m[1] || 0)) * 3600 + (+m[2]) * 60 + (+m[3])) * 10 + (+(m[4] || 0))) * 100; };
   $('#manForm').addEventListener('submit', async e => {
     e.preventDefault();
-    const msg = $('#manMsg'), name = cleanName($('#mName').value), ms = parseTime($('#mTime').value), code = $('#mCode').value.trim().toLowerCase();
+    const msg = $('#manMsg'), name = cleanName($('#mName').value), ms = parseTime($('#mTime').value);
+    let code = $('#mCode').value.trim().toLowerCase(); if (code.startsWith('m1-')){ code = code.slice(3); $('#mTier').value = 'w1'; }
+    const w1 = $('#mTier').value === 'w1', col = w1 ? 'ranking1' : 'ranking', list = w1 ? ranking1 : ranking;
     if (name.length < 2){ msg.textContent = 'Digite o nome exatamente como está no certificado.'; return; }
     if (ms == null){ msg.textContent = 'Tempo no formato do certificado, por exemplo 12:34.5'; return; }
     if (ms < 30000 || ms >= 36000000){ msg.textContent = 'Tempo fora do intervalo aceito (30 s a 10 h).'; return; }
     const ok = (await sha1hex(name.toLowerCase() + '|' + Math.floor(ms / 100) + '|arcade-unisanta')).slice(0, 7);
     if (code !== ok){ msg.textContent = 'O código não confere com esse nome e tempo. Confira letra por letra.'; return; }
-    if (ranking.some(r => (r.name || '').toLowerCase() === name.toLowerCase() && Math.floor(n(r.ms) / 100) === Math.floor(ms / 100))){ msg.textContent = 'Esse resultado já está no ranking.'; return; }
-    try { await fs.addDoc(fs.collection(db, 'ranking'), {name, ms, at: new Date().toISOString(), manual: true}); msg.textContent = `${name} entrou no ranking com ${fmt(ms)}.`; $('#manForm').reset(); }
+    if (list.some(r => (r.name || '').toLowerCase() === name.toLowerCase() && Math.floor(n(r.ms) / 100) === Math.floor(ms / 100))){ msg.textContent = 'Esse resultado já está no ranking.'; return; }
+    try { await fs.addDoc(fs.collection(db, col), {name, ms, at: new Date().toISOString(), manual: true}); msg.textContent = `${name} entrou no ranking ${w1 ? 'do Mundo 1' : 'final'} com ${fmt(ms)}.`; $('#manForm').reset(); }
     catch { msg.textContent = 'Não consegui gravar. Confira as regras do Firestore.'; }
   });
   $('#btnLogin').addEventListener('click', () => {
@@ -498,15 +532,17 @@ try {
     const tp = players.filter(p => p.test);
     const keys = new Set(tp.filter(p => p.finishedMs != null).map(p => (p.name || '').toLowerCase() + '|' + Math.floor(p.finishedMs / 100)));
     const tr = ranking.filter(r => keys.has((r.name || '').toLowerCase() + '|' + Math.floor(n(r.ms) / 100)));
-    try { await Promise.all([...tp.map(p => DEL('players', p.id)), ...tr.map(r => DEL('ranking', r.id))]); say(`${tp.length} jogador(es) de teste e ${tr.length} resultado(s) apagados.`); }
+    const keys1 = new Set(tp.filter(p => p.w1Ms != null).map(p => (p.name || '').toLowerCase() + '|' + Math.floor(p.w1Ms / 100)));
+    const tr1 = ranking1.filter(r => keys1.has((r.name || '').toLowerCase() + '|' + Math.floor(n(r.ms) / 100)));
+    try { await Promise.all([...tp.map(p => DEL('players', p.id)), ...tr.map(r => DEL('ranking', r.id)), ...tr1.map(r => DEL('ranking1', r.id))]); say(`${tp.length} jogador(es) de teste e ${tr.length + tr1.length} resultado(s) apagados.`); }
     catch { say('Não consegui apagar tudo. Confira as regras do Firestore.'); }
   }));
   $('#btnWipe').addEventListener('click', () => confirmBtn($('#btnWipe'), 'ZERAR TUDO', async () => {
     try {
-      const [ps, rs, vs] = await Promise.all(['players', 'ranking', 'reviews'].map(c => fs.getDocs(fs.collection(db, c))));
-      const refs = [...ps.docs, ...rs.docs, ...vs.docs].map(d => d.ref);
+      const [ps, rs, vs, r1] = await Promise.all(['players', 'ranking', 'reviews', 'ranking1'].map(c => fs.getDocs(fs.collection(db, c))));
+      const refs = [...ps.docs, ...rs.docs, ...vs.docs, ...r1.docs].map(d => d.ref);
       for (let i = 0; i < refs.length; i += 400){ const b = fs.writeBatch(db); refs.slice(i, i + 400).forEach(r => b.delete(r)); await b.commit(); }
-      say(`Tudo zerado: ${ps.size} jogador(es), ${rs.size} resultado(s) e ${vs.size} avaliação(ões) apagados.`);
+      say(`Tudo zerado: ${ps.size} jogador(es), ${rs.size + r1.size} resultado(s) e ${vs.size} avaliação(ões) apagados.`);
     } catch { say('Não consegui zerar. Confira as regras do Firestore.'); }
   }));
   au.onAuthStateChanged(auth, user => {
@@ -523,6 +559,9 @@ try {
     }, () => setLive(false, 'SEM ACESSO: confira as regras do Firestore')));
     unsubs.push(fs.onSnapshot(fs.query(fs.collection(db, 'ranking'), fs.orderBy('ms', 'asc'), fs.limit(50)), s => {
       ranking = s.docs.map(d => ({id: d.id, ...d.data()})); render();
+    }, () => {}));
+    unsubs.push(fs.onSnapshot(fs.query(fs.collection(db, 'ranking1'), fs.orderBy('ms', 'asc'), fs.limit(50)), s => {
+      ranking1 = s.docs.map(d => ({id: d.id, ...d.data()})); render();
     }, () => {}));
     unsubs.push(fs.onSnapshot(fs.collection(db, 'reviews'), s => {
       reviews = s.docs.map(d => ({id: d.id, ...d.data()})); renderReviews();

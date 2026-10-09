@@ -16,6 +16,21 @@ service cloud.firestore {
     function okCount(v, max) { return v is int && v >= 0 && v <= max; }
     // LinkedIn: só o identificador do perfil (linkedin.com/in/<id>); o link é sempre montado pelo jogo
     function okLi(s) { return s is string && s.matches('^[A-Za-z0-9-]{3,100}$'); }
+    // GitHub: só o nome de usuário (github.com/<usuario>); o link também é montado pelo jogo
+    function okGh(s) { return s is string && s.matches('^[A-Za-z0-9]([A-Za-z0-9-]{0,37}[A-Za-z0-9])?$'); }
+
+    // Resultado de ranking (vale para o ranking final e para o do Mundo 1)
+    function validEntry(d) {
+      return d.keys().hasOnly(['name','ms','score','pen','li','gh','at','uid','run','manual'])
+        && d.keys().hasAll(['name','ms','at'])
+        && okName(d.name)
+        && d.ms is int && d.ms >= 30000 && d.ms < 36000000
+        && d.at is string && d.at.size() <= 40
+        && (!('score' in d) || d.score == null || okCount(d.score, 16000))
+        && (!('pen' in d) || okCount(d.pen, 1920000))
+        && (!('li' in d) || okLi(d.li))
+        && (!('gh' in d) || okGh(d.gh));
+    }
 
     // Telemetria de cada partida (só o dono escreve, só o admin lê a lista)
     match /players/{runId} {
@@ -35,12 +50,14 @@ service cloud.firestore {
         && request.resource.data.pen >= resource.data.get('pen', 0)
         && request.resource.data.skipped >= resource.data.get('skipped', 0)
         && (resource.data.get('over', null) == null || request.resource.data.over == resource.data.over)
+        // o tempo do Mundo 1 é gravado uma vez e não muda mais
+        && (resource.data.get('w1Ms', null) == null || request.resource.data.get('w1Ms', null) == resource.data.w1Ms)
         && (request.time > resource.data.lastSeen + duration.value(3, 's')
             || (request.resource.data.left == true && resource.data.left != true));
 
       function validPlayer(d) {
         return d.keys().hasOnly(['name','startedAt','lastSeen','level','cleared','finishedMs','score',
-              'hintsUsed','skipped','pen','over','eggs','cmdTotal','errTotal','cmds','errs','device','test','room','left','li','uid','t0'])
+              'hintsUsed','skipped','pen','over','eggs','cmdTotal','errTotal','cmds','errs','device','test','room','left','li','gh','uid','t0','w1Ms','w1Pen'])
           && d.keys().hasAll(['name','startedAt','lastSeen','level','cleared','finishedMs','score',
               'hintsUsed','skipped','pen','over','eggs','cmdTotal','errTotal','cmds','errs','device','test','room','left','li','uid','t0'])
           && okName(d.name)
@@ -55,6 +72,9 @@ service cloud.firestore {
           && (d.over == null || d.over in ['surrender', 'timeout'])
           && okCount(d.eggs, 40)
           && d.li is string && (d.li == '' || okLi(d.li))
+          && (!('gh' in d) || okGh(d.gh))
+          && (!('w1Ms' in d) || okCount(d.w1Ms, 360000000))
+          && (!('w1Pen' in d) || (okCount(d.w1Pen, 1920000) && d.w1Pen % 60000 == 0))
           && okCount(d.cmdTotal, 100000) && okCount(d.errTotal, 100000)
           && d.cmds is map && d.cmds.size() <= 30
           && d.errs is map && d.errs.size() <= 30
@@ -73,16 +93,6 @@ service cloud.firestore {
             && entryId == request.auth.uid + '_' + request.resource.data.run);
       allow update: if false;
 
-      function validEntry(d) {
-        return d.keys().hasOnly(['name','ms','score','pen','li','at','uid','run','manual'])
-          && d.keys().hasAll(['name','ms','at'])
-          && okName(d.name)
-          && d.ms is int && d.ms >= 30000 && d.ms < 36000000
-          && d.at is string && d.at.size() <= 40
-          && (!('score' in d) || d.score == null || okCount(d.score, 16000))
-          && (!('pen' in d) || okCount(d.pen, 1920000))
-          && (!('li' in d) || okLi(d.li));
-      }
       function validRun(d) {
         return validEntry(d)
           && !('manual' in d)
@@ -98,7 +108,37 @@ service cloud.firestore {
           && p.name == d.name
           && p.pen == d.get('pen', 0)
           && p.li == d.get('li', '')
+          && p.get('gh', '') == d.get('gh', '')
           // o tempo do ranking inclui a penalidade das dicas; o tempo real no servidor precisa cobrir o resto
+          && request.time.toMillis() - p.t0.toMillis() >= d.ms - d.get('pen', 0) - 20000;
+      }
+    }
+
+    // Ranking do Mundo 1: quem derrotou o primeiro boss (o relógio para nesse momento)
+    match /ranking1/{entryId} {
+      allow get: if true;
+      allow list: if request.query.limit <= 10 || isAdmin();
+      allow delete: if isAdmin();
+      allow create: if (isAdmin() && validEntry(request.resource.data) && request.resource.data.manual == true)
+        || (signedIn() && validRun1(request.resource.data)
+            && entryId == request.auth.uid + '_' + request.resource.data.run);
+      allow update: if false;
+
+      function validRun1(d) {
+        return validEntry(d)
+          && !('manual' in d)
+          && d.uid == request.auth.uid
+          && d.run is string && d.run.matches('^[A-Za-z0-9_-]{4,40}$')
+          && runMatches1(d, get(/databases/$(database)/documents/players/$(d.run)).data);
+      }
+      function runMatches1(d, p) {
+        return p.uid == request.auth.uid
+          && p.cleared >= 9
+          && p.get('w1Ms', null) == d.ms
+          && p.name == d.name
+          && p.get('w1Pen', 0) == d.get('pen', 0)
+          && p.li == d.get('li', '')
+          && p.get('gh', '') == d.get('gh', '')
           && request.time.toMillis() - p.t0.toMillis() >= d.ms - d.get('pen', 0) - 20000;
       }
     }
